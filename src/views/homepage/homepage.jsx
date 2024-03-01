@@ -1,12 +1,11 @@
 import React from 'react';
-import style from './homepage.module.scss';
-
-
+import Cards from '../../components/cards/cards';
 
 const Homepage = () => {
-	return (
-		<div className={style.homepage}>
 
+	return (
+		<div>
+			<Cards />
 		</div>
 	);
 };
