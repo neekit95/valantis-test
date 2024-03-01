@@ -18,3 +18,16 @@
   min-width: 100vw;
   flex-direction: column;
 }
+
+.cards {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: cornflowerblue;
+  width: 70vw;
+  height: 70vh;
+  overflow: scroll;
+  margin: 10px;
+  padding: 10px;
+  flex-wrap: wrap;
+}
