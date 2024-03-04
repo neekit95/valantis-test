@@ -9,6 +9,7 @@ const Homepage = () => {
 	const [limit, setLimit] = useState(50);
 	const [listOfItems, setListOfItems] = useState([]);
 	const [isLoading, setIsLoading] = useState(false);
+	const [itemsLenght, setItemsLenght] = useState(0);
 
 	const getCurrentDate = () => {
 		const date = new Date();
@@ -76,9 +77,9 @@ const Homepage = () => {
 		setIsLoading(false)
 	};
 
-	// useEffect(() => {
-	// 	console.log('listOfitems', listOfItems)
-	// }, [listOfItems]);
+	useEffect(() => {
+		setItemsLenght(listOfItems.length)
+	}, [listOfItems]);
 
 	const handleClick = () => {
 		setListOfID([])
@@ -89,8 +90,9 @@ const Homepage = () => {
 
 	return (
 		<div className={style.homepage}>
-			{isLoading ? <div>Loading...</div> :
-				<div>
+			<div className={style.container}>
+				{isLoading ? <div>Loading...</div> :
+
 					<div className={style.cards}>
 						{listOfItems.map((item, index) => (
 							<div key={index}>
@@ -98,19 +100,17 @@ const Homepage = () => {
 							</div>
 						))}
 					</div>
+				}
+			</div>
 
 
-					<button
-						onClick={handleClick}
-					>
-						fetch data
-					</button>
+			<button
+				onClick={handleClick}
+			>
+				fetch data
+			</button>
 
-				</div>
-
-			}
-
-
+			Количество товаров: {itemsLenght}
 		</div>
 	);
 };
