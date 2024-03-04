@@ -2,13 +2,27 @@ import React from 'react';
 import style from './card.module.scss'
 
 const Card = (props) => {
-	console.log('props.id:', props.id)
+	console.log(props.items);
 	return (
 		<div className={style.container}>
-			<p>
-				id:
-				{props.id}
-			</p>
+
+			<div className={style.product}>
+				{props.items.product}
+			</div>
+
+			<div className={style.brand}>
+				{props.items.brand}
+			</div>
+
+			<div className={style.price}>
+				price: <span className={style.span}> {props.items.price} </span> ₽
+			</div>
+
+			<div className={style.id}>
+				id: {props.items.id}
+			</div>
+
+
 		</div>
 	);
 };
