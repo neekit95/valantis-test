@@ -2,7 +2,6 @@ import React from 'react';
 import style from './card.module.scss'
 
 const Card = (props) => {
-	console.log(props.items);
 	return (
 		<div className={style.container}>
 

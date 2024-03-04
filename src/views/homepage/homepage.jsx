@@ -16,66 +16,98 @@ const Homepage = () => {
 		const year = date.getUTCFullYear();
 		const month = (`0${date.getUTCMonth() + 1}`).slice(-2);
 		const day = (`0${date.getUTCDate()}`).slice(-2);
-
 		return `${year}${month}${day}`;
 	};
 
+	const tryFetch = async () => {
+		const maxAttempts = 3; // Максимальное количество попыток
+
+		for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+			try {
+				const timestamp = getCurrentDate();
+				const password = 'Valantis';
+				const xAuth = md5(`${password}_${timestamp}`);
+
+				const idsResponse = await fetch('http://api.valantis.store:40000/', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+						'X-Auth': xAuth,
+					},
+					body: JSON.stringify({
+						action: 'get_ids',
+						params: {
+							offset: offset,
+							limit: limit,
+						},
+					}),
+				});
+
+				const idsData = await idsResponse.json();
+				console.log('idsData:', idsData);
+
+				const ids = idsData.result;
+				console.log('ids:', ids);
+
+				const uniqueIds = [...new Set(ids)]
+				console.log('uniqueIds:', uniqueIds);
+				// добавить фильтр на дубликаты
+				setListOfID(uniqueIds);
+
+				const itemsResponse = await fetch('http://api.valantis.store:40000/', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+						'X-Auth': xAuth,
+					},
+					body: JSON.stringify({
+						action: 'get_items',
+						params: {
+							'ids': uniqueIds
+						},
+					}),
+				});
+
+				const itemsData = await itemsResponse.json();
+
+				const items = itemsData.result;
+				const uniqueItems = Array.from(new Set(items.map(item => item.id))).map(id => {
+					return items.find(item => item.id === id);
+				});
+
+				console.log('items:', items);
+				console.log('uniqueItems:', uniqueItems);
+
+				setListOfItems(uniqueItems);
+
+				// Выход из цикла, если запрос успешен
+				break;
+			} catch (error) {
+				console.error(`Error on attempt ${attempt}:`, error);
+
+				if (attempt === maxAttempts) {
+					// Вернуть ошибку, если достигнуто максимальное количество попыток
+					throw new Error('Maximum number of attempts reached');
+				}
+
+				// Пауза перед следующей попыткой (можете регулировать этот интервал)
+				await new Promise(resolve => setTimeout(resolve, 1000));
+			}
+		}
+	};
+
 	const fetchData = async () => {
-		setIsLoading(true)
+		setIsLoading(true);
+
 		try {
-			const timestamp = getCurrentDate();
-			const password = 'Valantis';
-			const xAuth = md5(`${password}_${timestamp}`);
-
-			const idsResponse = await fetch('http://api.valantis.store:40000/', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-					'X-Auth': xAuth,
-				},
-				body: JSON.stringify({
-					action: 'get_ids',
-					params: {
-						offset: offset,
-						limit: limit,
-					},
-				}),
-			});
-
-			const idsData = await idsResponse.json();
-			console.log('idsData:', idsData);
-
-			const ids = idsData.result;
-			console.log('ids:', ids);
-
-			// добавить фильтр на дубликаты
-			setListOfID(ids);
-
-			const itemsResponse = await fetch('http://api.valantis.store:40000/', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-					'X-Auth': xAuth,
-				},
-				body: JSON.stringify({
-					action: 'get_items',
-					params: {
-						'ids': ids
-					},
-				}),
-			});
-
-			const itemsData = await itemsResponse.json();
-
-			const items = itemsData.result;
-
-			setListOfItems(items);
-
+			await tryFetch();
 		} catch (error) {
 			console.error('Error:', error);
 		}
-		setIsLoading(false)
+
+		setIsLoading(false);
 	};
+
 
 	useEffect(() => {
 		setItemsLenght(listOfItems.length)
