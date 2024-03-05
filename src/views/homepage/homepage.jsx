@@ -6,7 +6,7 @@ import style from './homepage.module.scss'
 const Homepage = () => {
 	const [listOfID, setListOfID] = useState([]);
 	const [offset, setOffset] = useState(0);
-	const [limit, setLimit] = useState(50);
+	const [limit, setLimit] = useState(52);
 	const [listOfItems, setListOfItems] = useState([]);
 	const [isLoading, setIsLoading] = useState(false);
 	const [itemsLenght, setItemsLenght] = useState(0);
@@ -20,7 +20,7 @@ const Homepage = () => {
 	};
 
 	const tryFetch = async () => {
-		const maxAttempts = 3; // Максимальное количество попыток
+		const maxAttempts = 4; // Максимальное количество попыток
 
 		for (let attempt = 1; attempt <= maxAttempts; attempt++) {
 			try {
@@ -51,7 +51,7 @@ const Homepage = () => {
 
 				const uniqueIds = [...new Set(ids)]
 				console.log('uniqueIds:', uniqueIds);
-				// добавить фильтр на дубликаты
+
 				setListOfID(uniqueIds);
 
 				const itemsResponse = await fetch('http://api.valantis.store:40000/', {
@@ -71,32 +71,31 @@ const Homepage = () => {
 				const itemsData = await itemsResponse.json();
 
 				const items = itemsData.result;
+				console.log('items:', items);
+
 				const uniqueItems = Array.from(new Set(items.map(item => item.id))).map(id => {
 					return items.find(item => item.id === id);
 				});
-
-				console.log('items:', items);
 				console.log('uniqueItems:', uniqueItems);
 
+				uniqueItems.length = 50;
 				setListOfItems(uniqueItems);
-
 				// Выход из цикла, если запрос успешен
 				break;
+
 			} catch (error) {
+
 				console.error(`Error on attempt ${attempt}:`, error);
 
 				if (attempt === maxAttempts) {
-					// Вернуть ошибку, если достигнуто максимальное количество попыток
 					throw new Error('Maximum number of attempts reached');
 				}
-
-				// Пауза перед следующей попыткой (можете регулировать этот интервал)
-				await new Promise(resolve => setTimeout(resolve, 1000));
 			}
 		}
 	};
 
 	const fetchData = async () => {
+
 		setIsLoading(true);
 
 		try {
@@ -106,12 +105,14 @@ const Homepage = () => {
 		}
 
 		setIsLoading(false);
+
 	};
 
 
 	useEffect(() => {
 		setItemsLenght(listOfItems.length)
 	}, [listOfItems]);
+
 
 	const handleClick = () => {
 		setListOfID([])
