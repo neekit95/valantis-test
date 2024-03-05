@@ -2,6 +2,8 @@ import React, {useEffect, useState} from 'react';
 import md5 from "md5";
 import Card from '../../components/card/card'
 import style from './homepage.module.scss'
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 
 const Homepage = () => {
 	const [listOfID, setListOfID] = useState([]);
@@ -10,6 +12,7 @@ const Homepage = () => {
 	const [listOfItems, setListOfItems] = useState([]);
 	const [isLoading, setIsLoading] = useState(false);
 	const [itemsLenght, setItemsLenght] = useState(0);
+	const [page, setPage] = useState(1);
 
 	const getCurrentDate = () => {
 		const date = new Date();
@@ -20,7 +23,7 @@ const Homepage = () => {
 	};
 
 	const tryFetch = async () => {
-		const maxAttempts = 4; // Максимальное количество попыток
+		const maxAttempts = 10; // Максимальное количество попыток
 
 		for (let attempt = 1; attempt <= maxAttempts; attempt++) {
 			try {
@@ -38,19 +41,18 @@ const Homepage = () => {
 						action: 'get_ids',
 						params: {
 							offset: offset,
-							limit: limit,
+							// limit: limit,
+							limit: limit
 						},
 					}),
 				});
 
 				const idsData = await idsResponse.json();
-				console.log('idsData:', idsData);
 
 				const ids = idsData.result;
-				console.log('ids:', ids);
 
 				const uniqueIds = [...new Set(ids)]
-				console.log('uniqueIds:', uniqueIds);
+				// console.log('uniqueIds:', uniqueIds);
 
 				setListOfID(uniqueIds);
 
@@ -63,7 +65,8 @@ const Homepage = () => {
 					body: JSON.stringify({
 						action: 'get_items',
 						params: {
-							'ids': uniqueIds
+							// 'ids': uniqueIds
+							'ids': listOfID
 						},
 					}),
 				});
@@ -71,12 +74,11 @@ const Homepage = () => {
 				const itemsData = await itemsResponse.json();
 
 				const items = itemsData.result;
-				console.log('items:', items);
 
 				const uniqueItems = Array.from(new Set(items.map(item => item.id))).map(id => {
 					return items.find(item => item.id === id);
 				});
-				console.log('uniqueItems:', uniqueItems);
+				// console.log('uniqueItems:', uniqueItems);
 
 				uniqueItems.length = 50;
 				setListOfItems(uniqueItems);
@@ -113,16 +115,41 @@ const Homepage = () => {
 		setItemsLenght(listOfItems.length)
 	}, [listOfItems]);
 
+	useEffect(() => {
+		fetchData()
+	}, [offset]);
 
-	const handleClick = () => {
+	const nextPage = () => {
 		setListOfID([])
 		setListOfItems([]);
 		console.clear();
+		setOffset(prevOffset => prevOffset + 50);
+		setPage(prevPage => prevPage + 1);
+		fetchData()
+	}
+	const prevPage = () => {
+		setListOfID([])
+		setListOfItems([]);
+		console.clear();
+		setOffset(prevOffset => prevOffset - 50);
+		setPage(prevPage => prevPage - 1);
 		fetchData()
 	}
 
+	const findFiltered = (e) => {
+		setListOfID([])
+		setListOfItems([]);
+		console.clear();
+		setOffset(0);
+		setPage(1);
+		setLimit(e.target.value);
+		fetchData()
+	}
+
+
 	return (
 		<div className={style.homepage}>
+			<p> Страница {page}</p>
 			<div className={style.container}>
 				{isLoading ? <div>Loading...</div> :
 
@@ -136,14 +163,28 @@ const Homepage = () => {
 				}
 			</div>
 
+			<div className={style.buttons}>
 
-			<button
-				onClick={handleClick}
-			>
-				fetch data
-			</button>
+					<div className={style.buttons}>
 
-			Количество товаров: {itemsLenght}
+						<button
+							className={style.button}
+							disabled={page <= 1}
+							onClick={prevPage}
+						> {<ArrowBackIcon />}
+
+						</button>
+
+						<button
+							className={style.button}
+							onClick={nextPage}
+						>
+							{<ArrowForwardIcon />}
+						</button>
+					</div>
+
+
+			</div>
 		</div>
 	);
 };
