@@ -16,7 +16,10 @@ const Homepage = () => {
 	let URL2 = 'https://api.valantis.store:41000/';
 	const [textForUser, setTextForUser] = useState('Загрузка...');
 	const [allIds, setAllIds] = useState([]);
-	const [currentItems, setCurrentItems] = useState([]);
+	// const [isFirstRender, setIsFirstRender] = useState(true);
+	const [begin, setBegin] = useState(0);
+	const [end, setEnd] = useState(50);
+	const [currentIds, setCurrentIds] = useState([]);
 
 
 	const getCurrentDate = () => {
@@ -161,21 +164,36 @@ const Homepage = () => {
 		}
 	}
 
+	const getCurrentItems = async (from, to) => {
+		const currentItems = allIds.slice(from, to);
+		await fetchItemsFromServer(currentItems);
+	};
 
 	const nextPage = async () => {
 		console.clear();
+		setIsLoading(true)
 		await setListOfID([])
 		await setListOfItems([]);
-		await setOffset(prevOffset => prevOffset + 50);
+		// await setOffset(prevOffset => prevOffset + 50);
 		await setPage(prevPage => prevPage + 1);
+		await setBegin(prevBegin => prevBegin + 50);
+		await setEnd(prevEnd => prevEnd + 50);
+		await getCurrentItems(begin, end);
+		setIsLoading(false);
 	}
 
 	const prevPage = async () => {
 		console.clear();
+		setIsLoading(true)
+
 		await setListOfID([])
 		await setListOfItems([]);
-		await setOffset(prevOffset => prevOffset - 50);
+		// await setOffset(prevOffset => prevOffset - 50);
 		await setPage(prevPage => prevPage - 1);
+		await setBegin(prevBegin => prevBegin - 50);
+		await setEnd(prevEnd => prevEnd - 50);
+		await getCurrentItems(begin, end);
+		setIsLoading(false);
 
 	}
 
@@ -191,21 +209,31 @@ const Homepage = () => {
 		}
 	};
 	useEffect(() => {
-		tryFetch().then(() => getAllIds());
+		tryFetch()
+		getAllIds()
+		// .then(() => getAllIds());
 	}, []);
 
-	// useEffect(() => {
-	// 	getAllIds()
-	// }, []);
-
-
 	useEffect(() => {
-		if (listOfID.length === 50) {
-			fetchItemsFromServer(listOfID).then(() => {
-				setIsLoading(false);
-			});
+		console.log('allIds', allIds.length)
+		setCurrentIds(allIds.slice(begin, end));
+	},[allIds]);
+
+	useEffect(()=> {
+		if (currentIds.length === 50) {
+			fetchItemsFromServer(currentIds);
 		}
-	}, [listOfID]);
+		console.log('currentIds', currentIds);
+	}, [currentIds]);
+
+
+	// useEffect(() => {
+	// 	if (listOfID.length === 50) {
+	// 		fetchItemsFromServer(listOfID).then(() => {
+	// 			setIsLoading(false);
+	// 		});
+	// 	}
+	// }, [listOfID]);
 
 
 
@@ -216,6 +244,7 @@ const Homepage = () => {
 				<p> listOfItems.length: <span>{listOfItems.length}</span></p>
 				<p> listOfID.length: <span> {listOfID.length}</span></p>
 				<p> allIds.length:<span>{allIds.length}  </span></p>
+				<p> Элементы: {begin} - {end}</p>
 
 			</div>
 
