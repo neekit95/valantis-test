@@ -247,11 +247,7 @@ const Homepage2 = () => {
 		}
 	}, [listOfID.length !== 0]);
 
-	// useEffect(() => {
-	// 	if (isLoading === false) {
-	// 		getAllIds();
-	// 	}
-	// }, [isFirstRender]);
+
 	function setHide () {
 		setIsHided(!isHided);
 	}
