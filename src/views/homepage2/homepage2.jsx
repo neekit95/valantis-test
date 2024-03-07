@@ -21,6 +21,7 @@ const Homepage2 = () => {
 	const [end, setEnd] = useState(50);
 	const [currentIds, setCurrentIds] = useState([]);
 	const [isFirstRender, setIsFirstRender] = useState(true);
+	const [isHided, setIsHided] = useState(true);
 
 
 	const getCurrentDate = () => {
@@ -251,16 +252,31 @@ const Homepage2 = () => {
 	// 		getAllIds();
 	// 	}
 	// }, [isFirstRender]);
+	function setHide () {
+		setIsHided(!isHided);
+	}
 
 
 	return (
 		<div className={style.homepage}>
-			<div className={style.adminPanel}>
-				<p> page:<span>{page} </span></p>
-				<p> listOfItems.length: <span>{listOfItems.length}</span></p>
-				<p> listOfID.length: <span> {listOfID.length}</span></p>
-				<p> allIds.length:<span>{allIds.length}  </span></p>
-				<p> Элементы: {begin} - {end}</p>
+			<div
+
+				onClick={setHide}
+			>
+				{isHided ?
+					<div className={style.adminPanelHided}>
+						<p> + </p>
+					</div>
+					:
+					<div className={style.adminPanel}>
+						<p> page:<span>{page} </span></p>
+						<p> listOfItems.length: <span>{listOfItems.length}</span></p>
+						<p> listOfID.length: <span> {listOfID.length}</span></p>
+						<p> allIds.length:<span>{allIds.length}  </span></p>
+						<p> Элементы: {begin} - {end}</p>
+					</div>
+
+				}
 
 			</div>
 
@@ -283,14 +299,14 @@ const Homepage2 = () => {
 
 					<button
 						className={style.button}
-						disabled={page <= 1 || allIds.length === 0}
+						disabled={page <= 1 || allIds.length === 0 || isLoading}
 						onClick={prevPage}
 					> {<ArrowBackIcon/>}
 
 					</button>
 
 					<button
-						disabled={allIds.length === 0}
+						disabled={allIds.length === 0 || isLoading}
 						className={style.button}
 						onClick={nextPage}
 					>
