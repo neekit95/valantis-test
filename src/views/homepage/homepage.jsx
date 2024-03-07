@@ -1,21 +1,23 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useState, useRef} from 'react';
+import style from './homepage.module.scss'
 import md5 from "md5";
 import Card from '../../components/card/card'
-import style from './homepage.module.scss'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 
 const Homepage = () => {
 	const [listOfID, setListOfID] = useState([]);
 	const [offset, setOffset] = useState(0);
-	const [limit, setLimit] = useState(55);
+	const [limit, setLimit] = useState(51);
 	const [listOfItems, setListOfItems] = useState([]);
 	const [isLoading, setIsLoading] = useState(false);
 	const [page, setPage] = useState(1);
-	let URL ='http://api.valantis.store:40000/';
+	let URL = 'http://api.valantis.store:40000/';
 	let URL2 = 'https://api.valantis.store:41000/';
 	const [textForUser, setTextForUser] = useState('Загрузка...');
 	const [allIds, setAllIds] = useState([]);
+	const [currentItems, setCurrentItems] = useState([]);
+
 
 	const getCurrentDate = () => {
 		const date = new Date();
@@ -25,19 +27,21 @@ const Homepage = () => {
 		return `${year}${month}${day}`;
 	};
 
-	const tryFetch = async () => {
-		setTextForUser('Загрузка данных...');
+	const fetchIdsFromServer = async () => {
 		console.clear();
-		const maxAttempts = 3; // Максимальное количество попыток
-		// console.group()
+		setIsLoading(true);
+		const maxAttempts = 10;
 		for (let attempt = 1; attempt <= maxAttempts; attempt++) {
 
-			setTextForUser(`Загрузка данных... (попытка ${attempt})`);
+			if (attempt === 6) {
+				URL2 = URL;
+			}
 			try {
-				setTextForUser(`загружаем ids`);
 				const timestamp = getCurrentDate();
 				const password = 'Valantis';
 				const xAuth = md5(`${password}_${timestamp}`);
+
+				console.log(`загружаем ids (попытка ${attempt})`);
 
 				const idsResponse = await fetch(URL2, {
 					method: 'POST',
@@ -54,17 +58,38 @@ const Homepage = () => {
 					}),
 				});
 
-				idsResponse ? console.log('idsResponse OK') : console.log('idsResponse is null');
-
 				const idsData = await idsResponse.json();
+
 				const ids = idsData.result;
-				console.log('ids.length:', ids.length);
-				setTextForUser(`количество id: ${ids.length}. загружаем элементы`);
+				console.log(`количество ID при попытке № ${attempt}: ${ids.length}`);
 
 				const uniqueIds = [...new Set(ids)]
-				console.log('uniqueIds.length:', uniqueIds.length);
+				console.log(`Количество уникальных ID при попытке № ${attempt}:`, uniqueIds.length);
 
 				setListOfID(uniqueIds);
+
+				break;
+
+			} catch (error) {
+				console.error(`Error on attempt ${attempt}:`, error);
+				if (attempt === maxAttempts) {
+					throw new Error('Maximum number of attempts reached');
+				}
+			}
+
+		}
+	}
+
+	const fetchItemsFromServer = async (ids) => {
+		const maxAttempts = 10;
+		for (let attempt = 1; attempt < maxAttempts; attempt++) {
+			if (attempt === 6) {
+				URL2 = URL;
+			}
+			try {
+				const timestamp = getCurrentDate();
+				const password = 'Valantis';
+				const xAuth = md5(`${password}_${timestamp}`);
 
 				const itemsResponse = await fetch(URL2, {
 					method: 'POST',
@@ -75,55 +100,35 @@ const Homepage = () => {
 					body: JSON.stringify({
 						action: 'get_items',
 						params: {
-							'ids': uniqueIds,
+							'ids': ids,
 							limit: limit
 						},
 					}),
 				});
 
-				itemsResponse ? console.log('itemsResponse OK') : console.log('itemsResponse is null');
-
 				const itemsData = await itemsResponse.json();
-
 				const items = itemsData.result;
-				setTextForUser(`количество элементов: ${items.length}`);
+				const id = items.map(item => item.id);
 
-
-				const uniqueItems = Array.from(new Set(items.map(item => item.id))).map(id => {
+				// создаем массив из уникальных упорядоченных элементов по id
+				const uniqueIdsSet = new Set(id);
+				const uniqueIdsArray = Array.from(uniqueIdsSet);
+				const uniqueItems = uniqueIdsArray.map(id => {
 					return items.find(item => item.id === id);
-				});
-				// console.log('uniqueItems:', uniqueItems);
-
-				// console.log(uniqueItems.length);
+				})
 				uniqueItems.length = 50;
 				setListOfItems(uniqueItems);
-				// Выход из цикла, если запрос успешен
 				break;
-
 			} catch (error) {
-				console.error(`Error on attempt ${attempt}:`, error);
-				if (attempt === maxAttempts) {
-					throw new Error('Maximum number of attempts reached');
-				}
-				setTextForUser('Ошибка загрузки, попробуйте еще раз...');
+				console.error("Ошибка при загрузке элементов:", error);
 			}
-
 		}
-	};
+		setIsLoading(false)
+	}
 
-
-	const fetchData = async () => {
-		setIsLoading(true);
-		try {
-			await tryFetch();
-		} catch (error) {
-			console.error('Error:', error);
-		}
-		setIsLoading(false);
-	};
 	const getAllIds = async () => {
 		const maxAttempts = 10;
-		for (let attempt= 1; attempt < maxAttempts ; attempt++) {
+		for (let attempt = 1; attempt < maxAttempts; attempt++) {
 			if (attempt === 6) {
 				URL2 = URL;
 			}
@@ -145,8 +150,9 @@ const Homepage = () => {
 
 				const idsData = await idsResponse.json();
 				const ids = idsData.result;
+				console.log(`Всего  id на сервере: ${ids.length}`);
 				const uniqueAllIds = Array.from(new Set(ids));
-				console.log(uniqueAllIds.length);
+				console.log(`Всего уникальных id на сервере: ${uniqueAllIds.length}`);
 				setAllIds(uniqueAllIds);
 				break;
 			} catch (error) {
@@ -154,36 +160,64 @@ const Homepage = () => {
 			}
 		}
 	}
+
+
 	const nextPage = async () => {
-		setListOfID([])
-		setListOfItems([]);
 		console.clear();
+		await setListOfID([])
+		await setListOfItems([]);
 		await setOffset(prevOffset => prevOffset + 50);
 		await setPage(prevPage => prevPage + 1);
-		 fetchData()
 	}
 
 	const prevPage = async () => {
-		setListOfID([])
-		setListOfItems([]);
 		console.clear();
+		await setListOfID([])
+		await setListOfItems([]);
 		await setOffset(prevOffset => prevOffset - 50);
 		await setPage(prevPage => prevPage - 1);
-		 fetchData()
+
 	}
 
+
+	const tryFetch = async () => {
+		setIsLoading(true);
+		try {
+			setTextForUser(`Загрузка данных...`);
+			await fetchIdsFromServer();
+		} catch (error) {
+			console.error("Error:", error);
+			setTextForUser('Произошла ошибка, попробуйте еще раз...');
+		}
+	};
 	useEffect(() => {
-		fetchData()
-	}, [offset]);
+		tryFetch().then(() => getAllIds());
+	}, []);
+
+	// useEffect(() => {
+	// 	getAllIds()
+	// }, []);
+
 
 	useEffect(() => {
-		getAllIds()
-	}, []);
+		if (listOfID.length === 50) {
+			fetchItemsFromServer(listOfID).then(() => {
+				setIsLoading(false);
+			});
+		}
+	}, [listOfID]);
+
+
+
 	return (
 		<div className={style.homepage}>
-			<p> Страница {page}</p>
-			<p> Кол-во товаров: {listOfItems.length}</p>
-			<p> Кол-во ID: {listOfID.length} </p>
+			<div className={style.adminPanel}>
+				<p> page:<span>{page} </span></p>
+				<p> listOfItems.length: <span>{listOfItems.length}</span></p>
+				<p> listOfID.length: <span> {listOfID.length}</span></p>
+				<p> allIds.length:<span>{allIds.length}  </span></p>
+
+			</div>
 
 			<div className={style.container}>
 				{isLoading ? <div> {textForUser} </div> :

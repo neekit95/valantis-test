@@ -70,3 +70,28 @@
   font-weight: bold;
 
 }
+
+.adminPanel {
+min-width: 200px;
+  gap: 6px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  flex-direction: column;
+  position: absolute;
+  right:10px;
+  top:10px;
+  background-color: #96dcdc;
+  border-radius: 5px;
+  padding: 5px;
+  p {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    align-items: center;
+
+  }
+ span {
+   color: red;
+ }
+}
