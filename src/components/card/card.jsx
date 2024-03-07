@@ -1,3 +1,5 @@
+// noinspection JSDeprecatedSymbols
+
 import React from 'react';
 import style from './card.module.scss'
 
@@ -14,7 +16,7 @@ const Card = (props) => {
 			</div>
 
 			<div className={style.price}>
-				price: <span className={style.span}> {props.items.price} </span> ₽
+				<span className={style.span}> {props.items.price} </span> ₽
 			</div>
 
 			<div className={style.id}>

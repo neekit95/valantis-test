@@ -71,27 +71,49 @@
 
 }
 
-.adminPanel {
+.adminPanel, .adminPanelHided {
 min-width: 200px;
   gap: 6px;
   display: flex;
   justify-content: center;
-  align-items: flex-start;
+  align-items: center;
   flex-direction: column;
   position: absolute;
-  right:10px;
-  top:10px;
+bottom: 20px;
+  left: 20px;
   background-color: #96dcdc;
   border-radius: 5px;
   padding: 5px;
+  cursor: pointer;
+  opacity: 70%;
+  &:hover {
+    opacity: 100%;
+  }
   p {
     display: flex;
     justify-content: space-between;
-    width: 100%;
+    //width: 120%;
+    width: 200px;
     align-items: center;
+    //background-color: teal;
 
   }
  span {
    color: red;
  }
+}
+.adminPanelHided {
+min-width: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  p {
+    width: 20px;
+    justify-content: center;
+    align-items: center;
+  }
+  opacity: 40%;
+  &:hover {
+    opacity: 100%;
+  }
 }

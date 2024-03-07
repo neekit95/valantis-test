@@ -1,11 +1,11 @@
 import React, {useEffect, useState, useRef} from 'react';
-import style from './homepage.module.scss'
+import style from './homepage2.module.scss'
 import md5 from "md5";
 import Card from '../../components/card/card'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 
-const Homepage = () => {
+const Homepage2 = () => {
 	const [listOfID, setListOfID] = useState([]);
 	const [offset, setOffset] = useState(0);
 	const [limit, setLimit] = useState(51);
@@ -20,6 +20,8 @@ const Homepage = () => {
 	const [begin, setBegin] = useState(0);
 	const [end, setEnd] = useState(50);
 	const [currentIds, setCurrentIds] = useState([]);
+	const [isFirstRender, setIsFirstRender] = useState(true);
+	const [isHided, setIsHided] = useState(true);
 
 
 	const getCurrentDate = () => {
@@ -31,7 +33,7 @@ const Homepage = () => {
 	};
 
 	const fetchIdsFromServer = async () => {
-		console.clear();
+		// console.clear();
 		setIsLoading(true);
 		const maxAttempts = 10;
 		for (let attempt = 1; attempt <= maxAttempts; attempt++) {
@@ -127,6 +129,7 @@ const Homepage = () => {
 			}
 		}
 		setIsLoading(false)
+		setIsFirstRender(false);
 	}
 
 	const getAllIds = async () => {
@@ -169,32 +172,25 @@ const Homepage = () => {
 		await fetchItemsFromServer(currentItems);
 	};
 
+
 	const nextPage = async () => {
-		console.clear();
 		setIsLoading(true)
 		await setListOfID([])
 		await setListOfItems([]);
-		// await setOffset(prevOffset => prevOffset + 50);
-		await setPage(prevPage => prevPage + 1);
 		await setBegin(prevBegin => prevBegin + 50);
 		await setEnd(prevEnd => prevEnd + 50);
-		await getCurrentItems(begin, end);
-		setIsLoading(false);
+		await setPage(prevPage => prevPage + 1);
+		// setIsLoading(false);
 	}
 
 	const prevPage = async () => {
-		console.clear();
 		setIsLoading(true)
-
 		await setListOfID([])
 		await setListOfItems([]);
-		// await setOffset(prevOffset => prevOffset - 50);
-		await setPage(prevPage => prevPage - 1);
 		await setBegin(prevBegin => prevBegin - 50);
 		await setEnd(prevEnd => prevEnd - 50);
-		await getCurrentItems(begin, end);
-		setIsLoading(false);
-
+		await setPage(prevPage => prevPage - 1);
+		// setIsLoading(false);
 	}
 
 
@@ -208,43 +204,75 @@ const Homepage = () => {
 			setTextForUser('Произошла ошибка, попробуйте еще раз...');
 		}
 	};
+
+	useEffect(() => {
+		setTextForUser('Загрузка...');
+	}, [isLoading]);
+
 	useEffect(() => {
 		tryFetch()
-		getAllIds()
-		// .then(() => getAllIds());
 	}, []);
 
 	useEffect(() => {
 		console.log('allIds', allIds.length)
 		setCurrentIds(allIds.slice(begin, end));
-	},[allIds]);
+	}, [allIds, begin, end]);
 
-	useEffect(()=> {
-		if (currentIds.length === 50) {
-			fetchItemsFromServer(currentIds);
+	useEffect(() => {
+		if (!isFirstRender) {
+			getCurrentItems(begin, end);
 		}
-		console.log('currentIds', currentIds);
+		console.log('begin', begin);
+		console.log('end', end);
+	}, [page]);
+
+	useEffect(() => {
+		console.log('currentIds', currentIds.length)
 	}, [currentIds]);
 
+	useEffect(() => {
+		console.log('listOfItems', listOfItems)
+	}, [listOfID, listOfItems]);
 
-	// useEffect(() => {
-	// 	if (listOfID.length === 50) {
-	// 		fetchItemsFromServer(listOfID).then(() => {
-	// 			setIsLoading(false);
-	// 		});
-	// 	}
-	// }, [listOfID]);
+	useEffect(() => {
+		if (listOfID.length === 50) {
+			fetchItemsFromServer(listOfID).then(() => {
+					setIsLoading(false);
+					getAllIds();
+				// if (isLoading === false) {
+				// 	getAllIds();
+				// }
+				}
+			);
+		}
+	}, [listOfID.length !== 0]);
 
+
+	function setHide () {
+		setIsHided(!isHided);
+	}
 
 
 	return (
 		<div className={style.homepage}>
-			<div className={style.adminPanel}>
-				<p> page:<span>{page} </span></p>
-				<p> listOfItems.length: <span>{listOfItems.length}</span></p>
-				<p> listOfID.length: <span> {listOfID.length}</span></p>
-				<p> allIds.length:<span>{allIds.length}  </span></p>
-				<p> Элементы: {begin} - {end}</p>
+			<div
+
+				onClick={setHide}
+			>
+				{isHided ?
+					<div className={style.adminPanelHided}>
+						<p> + </p>
+					</div>
+					:
+					<div className={style.adminPanel}>
+						<p> page:<span>{page} </span></p>
+						<p> listOfItems.length: <span>{listOfItems.length}</span></p>
+						<p> listOfID.length: <span> {listOfID.length}</span></p>
+						<p> allIds.length:<span>{allIds.length}  </span></p>
+						<p> Элементы: {begin} - {end}</p>
+					</div>
+
+				}
 
 			</div>
 
@@ -267,13 +295,14 @@ const Homepage = () => {
 
 					<button
 						className={style.button}
-						disabled={page <= 1}
+						disabled={page <= 1 || allIds.length === 0 || isLoading}
 						onClick={prevPage}
 					> {<ArrowBackIcon/>}
 
 					</button>
 
 					<button
+						disabled={allIds.length === 0 || isLoading}
 						className={style.button}
 						onClick={nextPage}
 					>
@@ -287,6 +316,6 @@ const Homepage = () => {
 	);
 };
 
-export default Homepage;
+export default Homepage2;
 
 
