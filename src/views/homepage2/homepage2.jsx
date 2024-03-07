@@ -209,7 +209,7 @@ const Homepage2 = () => {
 	}, [isLoading]);
 
 	useEffect(() => {
-		tryFetch();
+		tryFetch()
 	}, []);
 
 	useEffect(() => {
@@ -237,15 +237,20 @@ const Homepage2 = () => {
 		if (listOfID.length === 50) {
 			fetchItemsFromServer(listOfID).then(() => {
 					setIsLoading(false);
-					// getAllIds();
+					getAllIds();
+				// if (isLoading === false) {
+				// 	getAllIds();
+				// }
 				}
 			);
 		}
-	}, [listOfID]);
+	}, [listOfID.length !== 0]);
 
-	useEffect(() => {
-		getAllIds();
-	}, [isFirstRender]);
+	// useEffect(() => {
+	// 	if (isLoading === false) {
+	// 		getAllIds();
+	// 	}
+	// }, [isFirstRender]);
 
 
 	return (
@@ -278,13 +283,14 @@ const Homepage2 = () => {
 
 					<button
 						className={style.button}
-						disabled={page <= 1}
+						disabled={page <= 1 || allIds.length === 0}
 						onClick={prevPage}
 					> {<ArrowBackIcon/>}
 
 					</button>
 
 					<button
+						disabled={allIds.length === 0}
 						className={style.button}
 						onClick={nextPage}
 					>
