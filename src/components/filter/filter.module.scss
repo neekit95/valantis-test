@@ -47,7 +47,7 @@
   width: 100%;
   //height: 100%;
   gap: 20px;
-  background-color: #fac3c3;
+  //background-color: #fac3c3;
   margin-top: 50px;
 }
 .contentInput {;
@@ -55,17 +55,23 @@
   flex-direction: column;
   justify-content: space-around;
   align-items: center;
-  background-color: #dfcd89;
+  //background-color: #dfcd89;
   height: 50px;
   width: 100%;
   label {
-    font-size: 10px;
-    background-color: red;
-    //position: absolute;
+    //background-color: red;
+    //position: absolute;;
+    font-size: 12px;
+    color:white;
     top:10p;
     width: 90%;
     left: 10px;
+    display: flex;
+    justify-content: flex-start;
+    align-items: flex-start;
+    flex-direction: column;
     input {
+      margin-top: 5px;
       position: relative;
       width: 100%;
       height: 30px;
@@ -73,5 +79,12 @@
       border-radius: 3px;
     }
   }
+}
 
+.submitButton {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: white;
+  color:black;
 }

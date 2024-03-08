@@ -1,15 +1,29 @@
-import React, {useEffect} from 'react';
+import React, {useEffect, useState} from 'react';
 import style from './filter.module.scss'
 import CloseIcon from '@mui/icons-material/Close';
 
 const Filter = (props) => {
-	function filter(ids, param) {
-		console.log(`$ids.length: ${ids.length}`);
-	}
+
+	const [filters, setFilters] = useState({
+		product: '',
+		brand: '',
+		price: '',
+		id: '',
+	});
 
 	useEffect(() => {
-		filter(props.allIds);
-	}, [props.allIds]);
+		console.log('filters', filters);
+	}, [filters]);
+
+	const handleInputChange = (event) => {
+		const { name, value } = event.target;
+		setFilters((prevFilters) => ({ ...prevFilters, [name]: value }));
+	};
+
+	const handleFilterSubmit = () => {
+		props.onFilter(filters);
+	};
+
 	return (
 		<div className={style.container}>
 
@@ -28,32 +42,57 @@ const Filter = (props) => {
 
 					<label htmlFor="product">
 						Название
-						<input name={'product'} placeholder={'Введите название товара'}/>
+						<input
+							name={'product'}
+							placeholder={'Введите название товара'}
+							value={filters.product}
+							onChange={handleInputChange}
+						/>
 					</label>
 				</div>
 
 				<div className={style.contentInput}>
-					<label htmlFor="price">
+					<label htmlFor="brand">
 						Бренд
-						<input name={'price'} placeholder={'Введите название бренда'}/>
+						<input
+							name={'brand'}
+							placeholder={'Введите название бренда'}
+							value={filters.brand}
+							onChange={handleInputChange}
+						/>
 					</label>
 				</div>
 
 				<div className={style.contentInput}>
 					<label htmlFor="price">
 						Цена
-						<input name={'price'} placeholder={'Введите цену товара'}/>
+						<input
+							name={'price'}
+							placeholder={'Введите цену товара'}
+							value={filters.price}
+							onChange={handleInputChange}
+						/>
 					</label>
 				</div>
 
 				<div className={style.contentInput}>
 					<label htmlFor="id">
 						Id
-						<input name={'id'} placeholder={'Введите id товара'}/>
+						<input
+							name={'id'}
+							placeholder={'Введите id товара'}
+							value={filters.id}
+							onChange={handleInputChange}
+						/>
 					</label>
 				</div>
 
-				<button> Применить</button>
+				<button
+					className={style.submitButton}
+					onClick={handleFilterSubmit}
+				>
+					Применить
+				</button>
 			</div>
 
 		</div>

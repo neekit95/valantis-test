@@ -196,6 +196,35 @@ const Homepage2 = () => {
 		}
 	};
 
+
+	const handleFilter = async (filters) => {
+		setIsLoading(true);
+		try {
+			const timestamp = getCurrentDate();
+			const password = 'Valantis';
+			const xAuth = md5(`${password}_${timestamp}`);
+
+			const filterResponse = await fetch(URL2, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					'X-Auth': xAuth,
+				},
+				body: JSON.stringify({
+					action: 'filter',
+					params: filters,
+				}),
+			});
+
+			const filterData = await filterResponse.json();
+			const filteredIds = filterData.result;
+			setCurrentIds(filteredIds);
+		} catch (error) {
+			console.error('Ошибка при фильтрации:', error);
+		} finally {
+			setIsLoading(false);
+		}
+	};
 	// При isLoading отображается "Загрузка..."
 	useEffect(() => {
 		setTextForUser(`Загрузка... `);
@@ -247,8 +276,7 @@ const Homepage2 = () => {
 				{isHidedFilter ?
 					<Filter
 						onToggle={setHideFilter}
-						// onFilter={getCurrentItems}
-						allIds={allIds}
+						onFilter={handleFilter}
 						isLoading={isLoading}
 						isFirstRender={isFirstRender}
 					/>
