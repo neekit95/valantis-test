@@ -9,6 +9,13 @@ const Filter = (props) => {
 		price: '',
 	});
 
+	function resetFilters() {
+		setFilters({
+			product: '',
+			brand: '',
+			price: '',
+		});
+	}
 	const [activeField, setActiveField] = useState('');
 
 	const handleInputChange = (event) => {
@@ -40,6 +47,8 @@ const Filter = (props) => {
 		if (Object.keys(filteredValues).length > 0) {
 			props.onFilter(filteredValues);
 		}
+
+		resetFilters()
 	};
 
 	return (

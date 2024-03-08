@@ -211,8 +211,13 @@ const Homepage2 = () => {
 
 	// При изменении begin, end, allIds срезаем allIds от begin до end
 	useEffect(() => {
-		setCurrentIds(allIds.slice(begin, end));
-	}, [allIds, begin, end]);
+		if (filteredIds.length !== 0) {
+			setListOfID(filteredIds.slice(begin, end));
+		} else  {
+			setListOfID(allIds.slice(begin, end));
+		}
+		// setListOfID(allIds.slice(begin, end));
+	}, [allIds, begin, end, filteredIds]);
 
 	// При изменении page, если это не firstRender получаем актуальные элементы
 	useEffect(() => {
@@ -232,6 +237,10 @@ const Homepage2 = () => {
 		}
 	}, [listOfID.length !== 0]);
 
+	useEffect(() => {
+		getCurrentItems()
+	}, [filteredIds.length !== 0]);
+
 
 	function setHideAdmin() {
 		setIsHidedAdmin(!isHidedAdmin);
@@ -246,7 +255,7 @@ const Homepage2 = () => {
 		setFilters(filters);
 	};
 	function showFiltered () {
-		console.log('filters', filters);
+		console.log('showFiltered: filters', filters);
 	}
 	async function getFilteredIds () {
 		setIsLoading(true);
@@ -277,6 +286,7 @@ const Homepage2 = () => {
 				const ids = idsData.result;
 				const uniqueIds = [...new Set(ids)]
 				setFilteredIds(uniqueIds);
+				setAllIds(uniqueIds);
 				console.log('uniqueIds in test', uniqueIds);
 				break;
 			} catch (error) {
@@ -326,7 +336,8 @@ const Homepage2 = () => {
 				const uniqueItems = uniqueIdsArray.map(id => {
 					return items.find(item => item.id === id);
 				})
-				uniqueItems.length = 50;
+				// uniqueItems.length = 50;
+				uniqueItems.slice(0,50);
 				setListOfItems(uniqueItems);
 				break;
 			} catch (error) {
@@ -412,7 +423,7 @@ const Homepage2 = () => {
 						</button>
 
 						<button
-							disabled={allIds.length === 0 || isLoading || listOfItems.length < 50}
+							disabled={allIds.length === 0 || isLoading || listOfID.length < 50}
 							className={style.button}
 							onClick={nextPage}
 						>
