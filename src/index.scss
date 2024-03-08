@@ -42,10 +42,20 @@ button {
   border-radius: 6px;
   color: white;
   cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  &:hover {
+    opacity: 90%;
+  }
   &:disabled {
     opacity: 0.6;
     cursor: not-allowed;
+    &:hover {
+      opacity: 0.6
+    }
   }
+
 }
 
 main {

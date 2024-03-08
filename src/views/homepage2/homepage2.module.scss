@@ -2,14 +2,15 @@
 .container {
   //padding-top: 10px;
   display: flex;
-  flex-direction: column;
+  //flex-direction: column;
   justify-content: center;
   align-items: center;
   text-align: start;
   height: 70vh;
   width: 100vw;
   //background-color: blue;
-  //margin-top: 5vw;
+  margin-top: 30px;
+
   margin-bottom: 5vw;
 }
 
@@ -34,7 +35,7 @@
   height: calc(100% + 15px);
   overflow-x: scroll;
   overflow-y: auto;
-  gap:20px;
+  gap: 20px;
   padding-right: 20px;
 
   display: grid;
@@ -60,6 +61,7 @@
   align-items: center;
   gap: 20px;
 }
+
 .button {
   display: flex;
   justify-content: center;
@@ -72,23 +74,22 @@
 }
 
 .adminPanel, .adminPanelHided {
-min-width: 200px;
+  min-width: 200px;
   gap: 6px;
   display: flex;
   justify-content: center;
   align-items: center;
   flex-direction: column;
   position: absolute;
-bottom: 20px;
+  bottom: 20px;
   left: 20px;
   background-color: #96dcdc;
   border-radius: 5px;
   padding: 5px;
   cursor: pointer;
-  opacity: 70%;
-  &:hover {
-    opacity: 100%;
-  }
+  opacity: 100%;
+
+
   p {
     display: flex;
     justify-content: space-between;
@@ -98,22 +99,37 @@ bottom: 20px;
     //background-color: teal;
 
   }
- span {
-   color: red;
- }
+
+  span {
+    color: red;
+  }
 }
+
 .adminPanelHided {
-min-width: 20px;
+  min-width: 20px;
   display: flex;
   justify-content: center;
   align-items: center;
+
   p {
     width: 20px;
     justify-content: center;
     align-items: center;
   }
-  opacity: 40%;
-  &:hover {
-    opacity: 100%;
-  }
 }
+
+.filterBtn {
+  display: flex;
+  position: absolute;
+  top: 1vh;
+  left: 1vh;
+  width: 140px;
+  height: 40px;
+  justify-content: space-around;
+  align-items: center;
+  //svg {
+  //  fill:red;
+  //  background-color: black;
+  //}
+}
+
