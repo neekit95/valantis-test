@@ -9,6 +9,14 @@ const Filter = (props) => {
 		price: '',
 	});
 
+	function refreshFilters () {
+		setFilters({
+			product: '',
+			brand: '',
+			price: '',
+		});
+	}
+
 	const [activeField, setActiveField] = useState('');
 
 	const handleInputChange = (event) => {
@@ -44,6 +52,7 @@ const Filter = (props) => {
 		// Фильтрация, если есть хотя бы одно непустое значение
 		if (Object.keys(filteredValues).length > 0) {
 			props.onFilter(filteredValues);
+			refreshFilters();
 		}
 
 		// props.onFilter(filters);

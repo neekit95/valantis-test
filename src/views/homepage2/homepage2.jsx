@@ -242,10 +242,7 @@ const Homepage2 = () => {
 
 
 	function applyFilters(filtersFromChildren) {
-		setFilters(prevFilter => prevFilter.length === 0);
-		console.clear();
-		setFilters(filtersFromChildren)
-		console.log(`filters homepage2`, filters);
+		setFilters(filtersFromChildren);
 	}
 
 	useEffect(() => {
