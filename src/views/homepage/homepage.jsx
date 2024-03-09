@@ -1,9 +1,11 @@
-import React, {useEffect, useState, useRef} from 'react';
-import style from './homepage.module.scss'
+import React, {useEffect, useState, useRef, Fragment} from 'react';
+import style from './homepage.module.scss';
 import md5 from "md5";
 import Card from '../../components/card/card'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import Filter from "../../components/filter/filter";
+import TuneIcon from '@mui/icons-material/Tune';
 
 const Homepage = () => {
 	const [listOfID, setListOfID] = useState([]);
@@ -14,12 +16,16 @@ const Homepage = () => {
 	const [page, setPage] = useState(1);
 	let URL = 'http://api.valantis.store:40000/';
 	let URL2 = 'https://api.valantis.store:41000/';
-	const [textForUser, setTextForUser] = useState('Загрузка...');
+	const [textForUser, setTextForUser] = useState(`Загрузка`);
 	const [allIds, setAllIds] = useState([]);
 	// const [isFirstRender, setIsFirstRender] = useState(true);
 	const [begin, setBegin] = useState(0);
 	const [end, setEnd] = useState(50);
 	const [currentIds, setCurrentIds] = useState([]);
+	const [isFirstRender, setIsFirstRender] = useState(true);
+	const [isHidedAdmin, setIsHidedAdmin] = useState(true);
+	const [isHidedFilter, setIsHidedFilter] = useState(false);
+	const [filteredItems, setFilteredItems] = useState([]);
 
 
 	const getCurrentDate = () => {
@@ -31,7 +37,6 @@ const Homepage = () => {
 	};
 
 	const fetchIdsFromServer = async () => {
-		console.clear();
 		setIsLoading(true);
 		const maxAttempts = 10;
 		for (let attempt = 1; attempt <= maxAttempts; attempt++) {
@@ -44,35 +49,21 @@ const Homepage = () => {
 				const password = 'Valantis';
 				const xAuth = md5(`${password}_${timestamp}`);
 
-				console.log(`загружаем ids (попытка ${attempt})`);
-
 				const idsResponse = await fetch(URL2, {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json',
-						'X-Auth': xAuth,
-					},
-					body: JSON.stringify({
-						action: 'get_ids',
-						params: {
-							offset: offset,
-							limit: limit
+					method: 'POST', headers: {
+						'Content-Type': 'application/json', 'X-Auth': xAuth,
+					}, body: JSON.stringify({
+						action: 'get_ids', params: {
+							offset: offset, limit: limit
 						},
 					}),
 				});
 
 				const idsData = await idsResponse.json();
-
 				const ids = idsData.result;
-				console.log(`количество ID при попытке № ${attempt}: ${ids.length}`);
-
 				const uniqueIds = [...new Set(ids)]
-				console.log(`Количество уникальных ID при попытке № ${attempt}:`, uniqueIds.length);
-
 				setListOfID(uniqueIds);
-
 				break;
-
 			} catch (error) {
 				console.error(`Error on attempt ${attempt}:`, error);
 				if (attempt === maxAttempts) {
@@ -95,16 +86,11 @@ const Homepage = () => {
 				const xAuth = md5(`${password}_${timestamp}`);
 
 				const itemsResponse = await fetch(URL2, {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json',
-						'X-Auth': xAuth,
-					},
-					body: JSON.stringify({
-						action: 'get_items',
-						params: {
-							'ids': ids,
-							limit: limit
+					method: 'POST', headers: {
+						'Content-Type': 'application/json', 'X-Auth': xAuth,
+					}, body: JSON.stringify({
+						action: 'get_items', params: {
+							'ids': ids, limit: limit
 						},
 					}),
 				});
@@ -127,6 +113,7 @@ const Homepage = () => {
 			}
 		}
 		setIsLoading(false)
+		setIsFirstRender(false);
 	}
 
 	const getAllIds = async () => {
@@ -141,21 +128,16 @@ const Homepage = () => {
 				const xAuth = md5(`${password}_${timestamp}`);
 
 				const idsResponse = await fetch(URL2, {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json',
-						'X-Auth': xAuth,
-					},
-					body: JSON.stringify({
+					method: 'POST', headers: {
+						'Content-Type': 'application/json', 'X-Auth': xAuth,
+					}, body: JSON.stringify({
 						action: 'get_ids'
 					}),
 				});
 
 				const idsData = await idsResponse.json();
 				const ids = idsData.result;
-				console.log(`Всего  id на сервере: ${ids.length}`);
 				const uniqueAllIds = Array.from(new Set(ids));
-				console.log(`Всего уникальных id на сервере: ${uniqueAllIds.length}`);
 				setAllIds(uniqueAllIds);
 				break;
 			} catch (error) {
@@ -169,32 +151,24 @@ const Homepage = () => {
 		await fetchItemsFromServer(currentItems);
 	};
 
+
 	const nextPage = async () => {
-		console.clear();
 		setIsLoading(true)
 		await setListOfID([])
 		await setListOfItems([]);
-		// await setOffset(prevOffset => prevOffset + 50);
-		await setPage(prevPage => prevPage + 1);
 		await setBegin(prevBegin => prevBegin + 50);
 		await setEnd(prevEnd => prevEnd + 50);
-		await getCurrentItems(begin, end);
-		setIsLoading(false);
+		await setPage(prevPage => prevPage + 1);
+		// setIsLoading(false);
 	}
 
 	const prevPage = async () => {
-		console.clear();
 		setIsLoading(true)
-
 		await setListOfID([])
 		await setListOfItems([]);
-		// await setOffset(prevOffset => prevOffset - 50);
-		await setPage(prevPage => prevPage - 1);
 		await setBegin(prevBegin => prevBegin - 50);
 		await setEnd(prevEnd => prevEnd - 50);
-		await getCurrentItems(begin, end);
-		setIsLoading(false);
-
+		await setPage(prevPage => prevPage - 1);
 	}
 
 
@@ -208,85 +182,123 @@ const Homepage = () => {
 			setTextForUser('Произошла ошибка, попробуйте еще раз...');
 		}
 	};
+
+	// При isLoading отображается "Загрузка..."
+	useEffect(() => {
+		setTextForUser(`Загрузка... `);
+	}, [isLoading]);
+
+	// При монтировании компонента вызываем tryFetch();
 	useEffect(() => {
 		tryFetch()
-		getAllIds()
-		// .then(() => getAllIds());
 	}, []);
 
+	// При изменении begin, end, allIds срезаем allIds от begin до end
 	useEffect(() => {
-		console.log('allIds', allIds.length)
 		setCurrentIds(allIds.slice(begin, end));
-	},[allIds]);
+	}, [allIds, begin, end]);
 
-	useEffect(()=> {
-		if (currentIds.length === 50) {
-			fetchItemsFromServer(currentIds);
+	// При изменении page, если это не firstRender получаем актуальные элементы
+	useEffect(() => {
+		if (!isFirstRender) {
+			getCurrentItems(begin, end);
 		}
-		console.log('currentIds', currentIds);
-	}, [currentIds]);
+	}, [page]);
+
+	// Когда кол-во элементов в массиве listOfID = 50, вызываем fetchItemsFromServer, затем вызов getAllIds (это нужно для производительности, затем мы не будем использовать listOfID)
+	useEffect(() => {
+		if (listOfID.length === 50) {
+			fetchItemsFromServer(listOfID).then(() => {
+				setIsLoading(false);
+				getAllIds();
+			});
+		}
+	}, [listOfID.length !== 0]);
 
 
-	// useEffect(() => {
-	// 	if (listOfID.length === 50) {
-	// 		fetchItemsFromServer(listOfID).then(() => {
-	// 			setIsLoading(false);
-	// 		});
-	// 	}
-	// }, [listOfID]);
+	function setHideAdmin() {
+		setIsHidedAdmin(!isHidedAdmin);
+	}
+
+	function setHideFilter() {
+		setIsHidedFilter(!isHidedFilter);
+	}
 
 
+	return (<div className={style.layout}>
 
-	return (
-		<div className={style.homepage}>
-			<div className={style.adminPanel}>
-				<p> page:<span>{page} </span></p>
-				<p> listOfItems.length: <span>{listOfItems.length}</span></p>
-				<p> listOfID.length: <span> {listOfID.length}</span></p>
-				<p> allIds.length:<span>{allIds.length}  </span></p>
-				<p> Элементы: {begin} - {end}</p>
-
+			<div className={style.filter}>
+				{isHidedFilter ? <Filter
+					onToggle={setHideFilter}
+					// onFilter={getCurrentItems}
+					allIds={allIds}
+					isLoading={isLoading}
+					isFirstRender={isFirstRender}
+				/> : <button
+					className={style.filterBtn}
+					onClick={setHideFilter}>
+					Открыть фильтр
+					<TuneIcon/>
+				</button>}
 			</div>
 
-			<div className={style.container}>
-				{isLoading ? <div> {textForUser} </div> :
 
-					<div className={style.cards}>
-						{listOfItems.map((item, index) => (
-							<div key={index}>
-								<Card items={item}/>
-							</div>
-						))}
+			<div className={style.homepage}>
+
+
+				<div
+
+					onClick={setHideAdmin}
+				>
+					{isHidedAdmin ? <div className={style.adminPanelHided}>
+						<p> + </p>
+					</div> : <div className={style.adminPanel}>
+						<p> page:<span>{page} </span></p>
+						<p> listOfItems.length: <span>{listOfItems.length}</span></p>
+						<p> listOfID.length: <span> {listOfID.length}</span></p>
+						<p> allIds.length:<span>{allIds.length}  </span></p>
+						<p> Элементы: {begin} - {end}</p>
 					</div>
-				}
-			</div>
 
-			<div className={style.buttons}>
+					}
+
+				</div>
+
+				<div className={style.container}>
+					{isLoading ? <div> {textForUser} </div> : <div className={style.cards}>
+						{listOfItems.map((item, index) => (<div key={index}>
+								<Card items={item}/>
+							</div>))}
+					</div>}
+				</div>
 
 				<div className={style.buttons}>
 
-					<button
-						className={style.button}
-						disabled={page <= 1}
-						onClick={prevPage}
-					> {<ArrowBackIcon/>}
+					<div className={style.buttons}>
 
-					</button>
+						<button
+							className={style.button}
+							disabled={page <= 1 || allIds.length === 0 || isLoading}
+							onClick={prevPage}
+						> {<ArrowBackIcon/>}
 
-					<button
-						className={style.button}
-						onClick={nextPage}
-					>
-						{<ArrowForwardIcon/>}
-					</button>
+						</button>
+
+						<button
+							disabled={allIds.length === 0 || isLoading}
+							className={style.button}
+							onClick={nextPage}
+						>
+							{<ArrowForwardIcon/>}
+						</button>
+					</div>
+
+
 				</div>
-
-
 			</div>
 		</div>
+
 	);
 };
 
 export default Homepage;
-
-

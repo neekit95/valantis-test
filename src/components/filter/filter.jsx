@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import style from './filter.module.scss';
 import CloseIcon from '@mui/icons-material/Close';
 
@@ -9,27 +9,25 @@ const Filter = (props) => {
 		price: '',
 	});
 
-	function resetFilters() {
-		setFilters({
-			product: '',
-			brand: '',
-			price: '',
-		});
-	}
 	const [activeField, setActiveField] = useState('');
 
 	const handleInputChange = (event) => {
-		const { name, value } = event.target;
+		const {name, value} = event.target;
 
 		// Если поле price, фильтруем ввод пользователя, оставляя только цифры
 		if (name === 'price') {
 			const filteredValue = value.replace(/[^0-9]/g, ''); // Оставляем только цифры
-			setFilters((prevFilters) => ({ ...prevFilters, [name]: filteredValue }));
+			setFilters((prevFilters) => ({...prevFilters, [name]: filteredValue}));
 		} else {
-			setFilters((prevFilters) => ({ ...prevFilters, [name]: value }));
+			setFilters((prevFilters) => ({...prevFilters, [name]: value}));
 		}
 
 		setActiveField(name);
+	};
+	const handleKeyPress = (event) => {
+		if (event.key === 'Enter') {
+			handleFilterSubmit();
+		}
 	};
 
 	const handleFilterSubmit = () => {
@@ -48,14 +46,16 @@ const Filter = (props) => {
 			props.onFilter(filteredValues);
 		}
 
-		resetFilters()
+		// props.onFilter(filters);
 	};
+
+
 
 	return (
 		<div className={style.container}>
 			<div className={style.buttonContainer}>
 				<button className={style.button} onClick={props.onToggle}>
-					<CloseIcon />
+					<CloseIcon/>
 				</button>
 			</div>
 			<div className={style.content}>
@@ -63,6 +63,7 @@ const Filter = (props) => {
 					<label htmlFor="product">
 						Название
 						<input
+							onKeyDown={handleKeyPress}
 							name={'product'}
 							placeholder={'Введите название товара'}
 							value={activeField === 'product' ? filters.product : ''}
@@ -74,6 +75,7 @@ const Filter = (props) => {
 					<label htmlFor="brand">
 						Бренд
 						<input
+							onKeyDown={handleKeyPress}
 							name={'brand'}
 							placeholder={'Введите название бренда'}
 							value={activeField === 'brand' ? filters.brand : ''}
@@ -85,6 +87,7 @@ const Filter = (props) => {
 					<label htmlFor="price">
 						Цена
 						<input
+							onKeyDown={handleKeyPress}
 							name={'price'}
 							placeholder={'Введите цену товара'}
 							value={activeField === 'price' ? filters.price : ''}

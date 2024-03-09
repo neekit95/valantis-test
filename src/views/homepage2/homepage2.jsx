@@ -24,8 +24,8 @@ const Homepage2 = () => {
 	const [currentIds, setCurrentIds] = useState([]);
 	const [isFirstRender, setIsFirstRender] = useState(true);
 	const [isHidedAdmin, setIsHidedAdmin] = useState(false);
-	const [isHidedFilter, setIsHidedFilter] = useState(false);
-	const [filteredIds, setFilteredIds] = useState([]);
+	const [isHidedFilter, setIsHidedFilter] = useState(true);
+	const [filteredItems, setFilteredItems] = useState([]);
 	const [filters, setFilters] = useState([]);
 
 
@@ -91,7 +91,6 @@ const Homepage2 = () => {
 				const password = 'Valantis';
 				const xAuth = md5(`${password}_${timestamp}`);
 
-
 				const itemsResponse = await fetch(URL2, {
 					method: 'POST',
 					headers: {
@@ -103,7 +102,7 @@ const Homepage2 = () => {
 						params: {
 							'ids': ids,
 							limit: limit
-						}
+						},
 					}),
 				});
 
@@ -164,6 +163,7 @@ const Homepage2 = () => {
 	const getCurrentItems = async (from, to) => {
 		const currentItems = allIds.slice(from, to);
 		await fetchItemsFromServer(currentItems);
+		// console.log(filters)
 	};
 
 
@@ -198,7 +198,6 @@ const Homepage2 = () => {
 		}
 	};
 
-
 	// При isLoading отображается "Загрузка..."
 	useEffect(() => {
 		setTextForUser(`Загрузка... `);
@@ -211,13 +210,8 @@ const Homepage2 = () => {
 
 	// При изменении begin, end, allIds срезаем allIds от begin до end
 	useEffect(() => {
-		if (filteredIds.length !== 0) {
-			setListOfID(filteredIds.slice(begin, end));
-		} else  {
-			setListOfID(allIds.slice(begin, end));
-		}
-		// setListOfID(allIds.slice(begin, end));
-	}, [allIds, begin, end, filteredIds]);
+		setCurrentIds(allIds.slice(begin, end));
+	}, [allIds, begin, end]);
 
 	// При изменении page, если это не firstRender получаем актуальные элементы
 	useEffect(() => {
@@ -237,10 +231,6 @@ const Homepage2 = () => {
 		}
 	}, [listOfID.length !== 0]);
 
-	useEffect(() => {
-		getCurrentItems()
-	}, [filteredIds.length !== 0]);
-
 
 	function setHideAdmin() {
 		setIsHidedAdmin(!isHidedAdmin);
@@ -250,103 +240,17 @@ const Homepage2 = () => {
 		setIsHidedFilter(!isHidedFilter);
 	}
 
-	const handleFilter = async (filters) => {
-		console.log('filters at HomePage', filters);
-		setFilters(filters);
-	};
-	function showFiltered () {
-		console.log('showFiltered: filters', filters);
-	}
-	async function getFilteredIds () {
-		setIsLoading(true);
-		const maxAttempts = 10;
-		for (let attempt = 1; attempt <= maxAttempts; attempt++) {
 
-			if (attempt === 6) {
-				URL2 = URL;
-			}
-			try {
-				const timestamp = getCurrentDate();
-				const password = 'Valantis';
-				const xAuth = md5(`${password}_${timestamp}`);
-
-				const idsResponse = await fetch(URL2, {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json',
-						'X-Auth': xAuth,
-					},
-					body: JSON.stringify({
-						action: 'filter',
-						params: filters
-					}),
-				});
-
-				const idsData = await idsResponse.json();
-				const ids = idsData.result;
-				const uniqueIds = [...new Set(ids)]
-				setFilteredIds(uniqueIds);
-				setAllIds(uniqueIds);
-				console.log('uniqueIds in test', uniqueIds);
-				break;
-			} catch (error) {
-				console.error(`Error on attempt ${attempt}:`, error);
-				if (attempt === maxAttempts) {
-					throw new Error('Maximum number of attempts reached');
-				}
-			}
-
-		}
+	function applyFilters(filtersFromChildren) {
+		setFilters(prevFilter => prevFilter.length === 0);
+		console.clear();
+		setFilters(filtersFromChildren)
+		console.log(`filters homepage2`, filters);
 	}
 
-	async function getFilteredItems (filtered) {
-		const maxAttempts = 10;
-		for (let attempt = 1; attempt < maxAttempts; attempt++) {
-			if (attempt === 6) {
-				URL2 = URL;
-			}
-			try {
-				const timestamp = getCurrentDate();
-				const password = 'Valantis';
-				const xAuth = md5(`${password}_${timestamp}`);
-
-
-				const itemsResponse = await fetch(URL2, {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json',
-						'X-Auth': xAuth,
-					},
-					body: JSON.stringify({
-						action: 'get_items',
-						params: {
-							'ids': filteredIds,
-							limit: limit
-						}
-					}),
-				});
-
-				const itemsData = await itemsResponse.json();
-				const items = itemsData.result;
-				const id = items.map(item => item.id);
-
-				// создаем массив из уникальных упорядоченных элементов по id
-				const uniqueIdsSet = new Set(id);
-				const uniqueIdsArray = Array.from(uniqueIdsSet);
-				const uniqueItems = uniqueIdsArray.map(id => {
-					return items.find(item => item.id === id);
-				})
-				// uniqueItems.length = 50;
-				uniqueItems.slice(0,50);
-				setListOfItems(uniqueItems);
-				break;
-			} catch (error) {
-				console.error("Ошибка при загрузке элементов:", error);
-			}
-		}
-		setIsLoading(false)
-		setIsFirstRender(false);
-	}
+	useEffect(() => {
+		console.log(`filters homepage2`, filters);
+	}, [filters]);
 
 
 	return (
@@ -356,9 +260,9 @@ const Homepage2 = () => {
 				{isHidedFilter ?
 					<Filter
 						onToggle={setHideFilter}
-						onFilter={handleFilter}
-						isLoading={isLoading}
-						isFirstRender={isFirstRender}
+						// onFilterChange={(filters) => console.log(filters)}
+						onFilter={applyFilters}
+						// onFilter={viewFilters}
 					/>
 					:
 					<button
@@ -388,8 +292,7 @@ const Homepage2 = () => {
 							<p> listOfItems.length: <span>{listOfItems.length}</span></p>
 							<p> listOfID.length: <span> {listOfID.length}</span></p>
 							<p> allIds.length:<span>{allIds.length}  </span></p>
-							<p> Элементы: <span> {begin} - {end}</span></p>
-							<p> filteredIds: <span>{filteredIds.length}</span></p>
+							<p> Элементы: {begin} - {end}</p>
 						</div>
 
 					}
@@ -423,7 +326,7 @@ const Homepage2 = () => {
 						</button>
 
 						<button
-							disabled={allIds.length === 0 || isLoading || listOfID.length < 50}
+							disabled={allIds.length === 0 || isLoading}
 							className={style.button}
 							onClick={nextPage}
 						>
@@ -431,12 +334,6 @@ const Homepage2 = () => {
 						</button>
 					</div>
 
-					<button onClick={getFilteredIds}>
-						Filter
-					</button>
-					<button onClick={getFilteredItems}>
-						getFilteredItems
-					</button>
 
 				</div>
 			</div>
@@ -446,5 +343,3 @@ const Homepage2 = () => {
 };
 
 export default Homepage2;
-
-
