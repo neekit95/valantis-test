@@ -82,6 +82,7 @@ const Homepage2 = () => {
 
 	const fetchItemsFromServer = async (ids) => {
 		const maxAttempts = 10;
+		setIsLoading(true);
 		for (let attempt = 1; attempt < maxAttempts; attempt++) {
 			if (attempt === 6) {
 				URL2 = URL;
@@ -215,7 +216,7 @@ const Homepage2 = () => {
 	// При isLoading отображается "Загрузка..."
 	useEffect(() => {
 		setTextForUser(`Загрузка... `);
-	}, [isLoading]);
+	}, [isLoading === true]);
 
 	// При монтировании компонента вызываем tryFetch();
 	useEffect(() => {
@@ -225,7 +226,7 @@ const Homepage2 = () => {
 	// При изменении begin, end, allIds срезаем allIds от begin до end
 	useEffect(() => {
 		setCurrentIds(allIds.slice(begin, end));
-	}, [ begin, end]);
+	}, [begin, end]);
 
 	// При изменении page, если это не firstRender получаем актуальные элементы
 	useEffect(() => {
@@ -243,7 +244,7 @@ const Homepage2 = () => {
 				}
 			);
 		}
-	}, [listOfID.length !== 0]);
+	}, [listOfID.length !== 0 && isFirstRender === true]);
 
 
 	function setHideAdmin() {
@@ -256,6 +257,8 @@ const Homepage2 = () => {
 
 
 	function applyFilters(filtersFromChildren) {
+		setListOfID([]);
+		setListOfItems([]);
 		setFilters(filtersFromChildren);
 	}
 
@@ -264,15 +267,20 @@ const Homepage2 = () => {
 	}, [filters]);
 
 	useEffect(() => {
+		setIsLoading(true);
 		getAllIds(filters)
-			// .then(getCurrentItems(begin, end))
+		// .then(getCurrentItems(begin, end))
 	}, [filters]);
 
 	useEffect(() => {
 		if (!isFirstRender && filters.length !== 0) {
+			setIsLoading(true);
 			getCurrentItems(begin, end);
 		}
-	},[filters, allIds]);
+	}, [filters, allIds]);
+
+	//TODO: Если вводят несуществующий товар, вернуть на первую страницу
+	// TODO: добавить загрузку когда идет фильтрация
 
 	return (
 		<div className={style.layout}>
@@ -314,6 +322,7 @@ const Homepage2 = () => {
 							<p> listOfID.length: <span> {listOfID.length}</span></p>
 							<p> allIds.length:<span>{allIds.length}  </span></p>
 							<p> Элементы: {begin} - {end}</p>
+							<p>filters: <span>{JSON.stringify(filters)}</span></p>
 						</div>
 
 					}
@@ -347,7 +356,7 @@ const Homepage2 = () => {
 						</button>
 
 						<button
-							disabled={allIds.length === 0 || isLoading || allIds.length < 50}
+							disabled={allIds.length === 0 || isLoading || allIds.length < 50 || listOfItems.length < 50}
 							className={style.button}
 							onClick={nextPage}
 						>
