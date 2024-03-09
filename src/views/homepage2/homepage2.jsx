@@ -27,7 +27,7 @@ const Homepage2 = () => {
 	const [isHidedFilter, setIsHidedFilter] = useState(true);
 	const [filteredItems, setFilteredItems] = useState([]);
 	const [filters, setFilters] = useState([]);
-
+	const [allIdsMax, setAllIdsMax] = useState(0);
 
 	const getCurrentDate = () => {
 		const date = new Date();
@@ -113,10 +113,16 @@ const Homepage2 = () => {
 				// создаем массив из уникальных упорядоченных элементов по id
 				const uniqueIdsSet = new Set(id);
 				const uniqueIdsArray = Array.from(uniqueIdsSet);
+				const maxLength = 50;
+				// Если длина массива меньше максимальной длины, оставляем его без изменений
+				const slicedIdsArray = uniqueIdsArray.length >= maxLength
+					? uniqueIdsArray.slice(0, maxLength)
+					: uniqueIdsArray;
+
 				const uniqueItems = uniqueIdsArray.map(id => {
 					return items.find(item => item.id === id);
 				})
-				uniqueItems.length = 50;
+
 				setListOfItems(uniqueItems);
 				break;
 			} catch (error) {
@@ -127,7 +133,7 @@ const Homepage2 = () => {
 		setIsFirstRender(false);
 	}
 
-	const getAllIds = async () => {
+	const getAllIds = async (params) => {
 		const maxAttempts = 10;
 		for (let attempt = 1; attempt < maxAttempts; attempt++) {
 			if (attempt === 6) {
@@ -145,7 +151,8 @@ const Homepage2 = () => {
 						'X-Auth': xAuth,
 					},
 					body: JSON.stringify({
-						action: 'get_ids'
+						action: params ? 'filter' : 'get_ids',
+						params: params || {}
 					}),
 				});
 
@@ -198,6 +205,13 @@ const Homepage2 = () => {
 		}
 	};
 
+	useEffect(() => {
+		if (allIds.length > allIdsMax) {
+			setAllIdsMax(allIds.length);
+		}
+	}, [allIds, allIdsMax]);
+
+
 	// При isLoading отображается "Загрузка..."
 	useEffect(() => {
 		setTextForUser(`Загрузка... `);
@@ -211,7 +225,7 @@ const Homepage2 = () => {
 	// При изменении begin, end, allIds срезаем allIds от begin до end
 	useEffect(() => {
 		setCurrentIds(allIds.slice(begin, end));
-	}, [allIds, begin, end]);
+	}, [ begin, end]);
 
 	// При изменении page, если это не firstRender получаем актуальные элементы
 	useEffect(() => {
@@ -249,6 +263,16 @@ const Homepage2 = () => {
 		console.log(`filters homepage2`, filters);
 	}, [filters]);
 
+	useEffect(() => {
+		getAllIds(filters)
+			// .then(getCurrentItems(begin, end))
+	}, [filters]);
+
+	useEffect(() => {
+		if (!isFirstRender && filters.length !== 0) {
+			getCurrentItems(begin, end);
+		}
+	},[filters, allIds]);
 
 	return (
 		<div className={style.layout}>
@@ -323,7 +347,7 @@ const Homepage2 = () => {
 						</button>
 
 						<button
-							disabled={allIds.length === 0 || isLoading}
+							disabled={allIds.length === 0 || isLoading || allIds.length < 50}
 							className={style.button}
 							onClick={nextPage}
 						>
