@@ -6,6 +6,7 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import Filter from "../../components/filter/filter";
 import TuneIcon from '@mui/icons-material/Tune';
+import filter from "../../components/filter/filter";
 
 const Homepage2 = () => {
 	const [listOfID, setListOfID] = useState([]);
@@ -198,7 +199,6 @@ const Homepage2 = () => {
 	const tryFetch = async () => {
 		setIsLoading(true);
 		try {
-			setTextForUser(`Загрузка данных...`);
 			await fetchIdsFromServer();
 		} catch (error) {
 			console.error("Error:", error);
@@ -206,11 +206,11 @@ const Homepage2 = () => {
 		}
 	};
 
-	useEffect(() => {
-		if (allIds.length > allIdsMax) {
-			setAllIdsMax(allIds.length);
-		}
-	}, [allIds, allIdsMax]);
+	// useEffect(() => {
+	// 	if (allIds.length > allIdsMax) {
+	// 		setAllIdsMax(allIds.length);
+	// 	}
+	// }, [allIds, allIdsMax]);
 
 
 	// При isLoading отображается "Загрузка..."
@@ -239,7 +239,7 @@ const Homepage2 = () => {
 	useEffect(() => {
 		if (listOfID.length === 50) {
 			fetchItemsFromServer(listOfID).then(() => {
-					setIsLoading(false);
+				// setIsLoading(false)''
 					getAllIds();
 				}
 			);
@@ -259,28 +259,32 @@ const Homepage2 = () => {
 	function applyFilters(filtersFromChildren) {
 		setListOfID([]);
 		setListOfItems([]);
+		setAllIds([]);
 		setFilters(filtersFromChildren);
 	}
 
 	useEffect(() => {
-		console.log(`filters homepage2`, filters);
-	}, [filters]);
-
-	useEffect(() => {
 		setIsLoading(true);
-		getAllIds(filters)
+		if (filter.length !== 0 && !isFirstRender) {
+			getAllIds(filters)
+		}
 		// .then(getCurrentItems(begin, end))
 	}, [filters]);
 
 	useEffect(() => {
 		if (!isFirstRender && filters.length !== 0) {
 			setIsLoading(true);
+			setListOfID([]);
+			// setListOfItems([]);
 			getCurrentItems(begin, end);
 		}
 	}, [filters, allIds]);
 
+
+	function refreshPage() {
+		window.location.reload();
+	}
 	//TODO: Если вводят несуществующий товар, вернуть на первую страницу
-	// TODO: добавить загрузку когда идет фильтрация
 
 	return (
 		<div className={style.layout}>
@@ -330,6 +334,17 @@ const Homepage2 = () => {
 				</div>
 
 				<div className={style.container}>
+					{filters.length !== 0 && isLoading === false && listOfItems.length === 0 && allIds.length === 0
+						?
+						<div className={style.noItems}>
+							<p>По вашему запросу ничего не найдено. Обновите страницу.</p>
+							<button onClick={refreshPage}>Обновить</button>
+
+						</div>
+						:
+						null
+					}
+
 					{isLoading ?
 						<div> {textForUser} </div>
 						:
