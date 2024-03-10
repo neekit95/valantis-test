@@ -22,7 +22,6 @@ const Homepage2 = () => {
 	// const [isFirstRender, setIsFirstRender] = useState(true);
 	const [begin, setBegin] = useState(0);
 	const [end, setEnd] = useState(50);
-	const [currentIds, setCurrentIds] = useState([]);
 	const [isFirstRender, setIsFirstRender] = useState(true);
 	const [isHidedAdmin, setIsHidedAdmin] = useState(false);
 	const [isHidedFilter, setIsHidedFilter] = useState(true);
@@ -37,6 +36,18 @@ const Homepage2 = () => {
 		const day = (`0${date.getUTCDate()}`).slice(-2);
 		return `${year}${month}${day}`;
 	};
+
+	function refreshPage() {
+		window.location.reload();
+	}
+
+	function setHideAdmin() {
+		setIsHidedAdmin(!isHidedAdmin);
+	}
+
+	function setHideFilter() {
+		setIsHidedFilter(!isHidedFilter);
+	}
 
 	const fetchIdsFromServer = async () => {
 		setIsLoading(true);
@@ -132,7 +143,7 @@ const Homepage2 = () => {
 			}
 		}
 		setIsLoading(false)
-		setIsFirstRender(false);
+		// setIsFirstRender(false);
 	}
 
 	const getAllIds = async (params) => {
@@ -167,18 +178,18 @@ const Homepage2 = () => {
 				console.error("Ошибка:", error)
 			}
 		}
+		setIsFirstRender(false);
+
 	}
 
 	const getCurrentItems = async (from, to) => {
 		const currentItems = allIds.slice(from, to);
 		await fetchItemsFromServer(currentItems);
-		// console.log(filters)
 	};
-
 
 	const nextPage = async () => {
 		setIsLoading(true)
-		setListOfID([])
+		// setListOfID([])
 		setListOfItems([]);
 		setBegin(prevBegin => prevBegin + 50);
 		setEnd(prevEnd => prevEnd + 50);
@@ -188,13 +199,12 @@ const Homepage2 = () => {
 
 	const prevPage = async () => {
 		setIsLoading(true)
-		setListOfID([])
+		// setListOfID([])
 		setListOfItems([]);
 		setBegin(prevBegin => prevBegin - 50);
 		setEnd(prevEnd => prevEnd - 50);
 		setPage(prevPage => prevPage - 1);
 	}
-
 
 	const tryFetch = async () => {
 		setIsLoading(true);
@@ -206,118 +216,93 @@ const Homepage2 = () => {
 		}
 	};
 
-	// useEffect(() => {
-	// 	if (allIds.length > allIdsMax) {
-	// 		setAllIdsMax(allIds.length);
-	// 	}
-	// }, [allIds, allIdsMax]);
-
-
 	// При isLoading отображается "Загрузка..."
 	useEffect(() => {
-		setTextForUser(`Загрузка... `);
-	}, [isLoading === true]);
+		if (isLoading === true) {
+			setTextForUser(`Загрузка... `);
+		}
+	}, [isLoading]);
 
 	// При монтировании компонента вызываем tryFetch();
 	useEffect(() => {
 		tryFetch()
 	}, []);
 
-	// При изменении begin, end, allIds срезаем allIds от begin до end
+	// Когда кол-во элементов в массиве listOfID = 50, вызываем fetchItemsFromServer, затем вызов getAllIds (это нужно для производительности, затем мы не будем использовать listOfID)
 	useEffect(() => {
-		setCurrentIds(allIds.slice(begin, end));
-	}, [begin, end]);
+		// setListOfItems([]);
+		if (listOfID.length === 50
+			&& isFirstRender === true) {
+			fetchItemsFromServer(listOfID).then(() => {
+					getAllIds();
+				}
+			);
+		}
+	}, [listOfID]);
 
-	// При изменении page, если это не firstRender получаем актуальные элементы
+	// Выясняем максимальное кол-во элементов в allIds
 	useEffect(() => {
-		if (!isFirstRender) {
+		if (allIdsMax < allIds.length) {
+			setAllIdsMax(allIds.length);
+		}
+
+		// При изменении allIds, если это не firstRender и не все элементы, то ставим setPage(1)
+		if (
+			allIds.length !== allIdsMax
+			&& isFirstRender === false
+
+		) {
+			setPage(1);
+		}
+	}, [allIds]);
+
+	// При изменении page, если это не firstRender, получаем актуальные элементы
+	useEffect(() => {
+		if (
+			isFirstRender === false
+		) {
 			getCurrentItems(begin, end);
 		}
 	}, [page]);
 
-	// // Когда кол-во элементов в массиве listOfID = 50, вызываем fetchItemsFromServer, затем вызов getAllIds (это нужно для производительности, затем мы не будем использовать listOfID)
-	// useEffect(() => {
-	// 	if (listOfID.length === 50) {
-	// 		fetchItemsFromServer(listOfID).then(() => {
-	// 				// setIsLoading(false)''
-	// 				getAllIds();
-	// 			}
-	// 		);
-	// 	}
-	// }, [listOfID.length !== 0 && isFirstRender === true]);
 
+	// 	До сюда все работает.
+	//  -----------------------------------------------------------------------------------
 
-	// useEffect(() => {
-	// 	if (listOfID.length === 50) {
-	// 		fetchItemsFromServer(listOfID).then(() => {
-	// 				// setIsLoading(false)''
-	// 				getAllIds();
-	// 			}
-	// 		);
-	// 	}
-	// },
-	// 	[
-	// 		listOfID.length !== 0
-	// 		// && isFirstRender === false
-	// 	]
-	// );
-
-	useEffect(() => {
-			// setListOfItems([]);
-			if (listOfID.length === 50
-				&& isFirstRender === true) {
-				fetchItemsFromServer(listOfID).then(() => {
-						getAllIds();
-					}
-				);
-			}
-
-
-		},
-		[
-			listOfID
-		]
-	);
-
-
-	function setHideAdmin() {
-		setIsHidedAdmin(!isHidedAdmin);
-	}
-
-	function setHideFilter() {
-		setIsHidedFilter(!isHidedFilter);
-	}
-
-
+	// Применяем фильты из компонента Filter:  setFilters(filtersFromChildren);
 	function applyFilters(filtersFromChildren) {
-		setPage(1);
 		// setListOfID([]);
 		// setListOfItems([]);
 		// setAllIds([]);
+		// // setPage(1);
 		setFilters(filtersFromChildren);
 	}
 
+
 	useEffect(() => {
-		setIsLoading(true);
-		if (filter.length !== 0 && !isFirstRender) {
+		if (
+			Object.keys(filters).length !== 0
+			&& allIds.length !== allIdsMax
+			// && isFirstRender === false
+		) {
+			setIsLoading(true);
 			getAllIds(filters)
 		}
-		// .then(getCurrentItems(begin, end))
-	}, [filters]);
+	}, [allIds]);
 
 	useEffect(() => {
-		if (!isFirstRender && filters.length !== 0) {
+		if (
+			isFirstRender === false
+			&& filters.length !== 0
+		) {
 			setIsLoading(true);
 			setListOfID([]);
-			// setListOfItems([]);
+			setListOfItems([]);
 			getCurrentItems(begin, end);
 		}
-	}, [filters, allIds]);
+	}, [filters]);
 
 
-	function refreshPage() {
-		window.location.reload();
-	}
 
 
 	// TODO: обработать исчезание страницы
@@ -329,9 +314,8 @@ const Homepage2 = () => {
 				{isHidedFilter ?
 					<Filter
 						onToggle={setHideFilter}
-						// onFilterChange={(filters) => console.log(filters)}
 						onFilter={applyFilters}
-						// onFilter={viewFilters}
+						isLoading={isLoading}
 					/>
 					:
 					<button
@@ -363,7 +347,11 @@ const Homepage2 = () => {
 							<p> allIds.length:<span>{allIds.length}  </span></p>
 							<p> Элементы: {begin} - {end}</p>
 							<p>filters: <span>{JSON.stringify(filters)}</span></p>
+							<p> allIdsMax: <span>{allIdsMax}</span></p>
 							<p>isFirstRender: <span>{isFirstRender ? `true` : `false`}</span></p>
+							<p>isLoading: <span>{isLoading ? `true` : `false`}</span></p>
+							{/*<p>isHidedAdmin: <span>{isHidedAdmin ? `true` : `false`}</span></p>*/}
+							{/*<p>isHidedFilter: <span>{isHidedFilter ? `true` : `false`}</span></p>*/}
 						</div>
 
 					}
@@ -382,16 +370,20 @@ const Homepage2 = () => {
 						null
 					}
 
-					{isLoading ?
-						<div> {textForUser} </div>
-						:
-						<div className={style.cards}>
-							{listOfItems.map((item, index) => (
-								<div key={index}>
-									<Card items={item}/>
-								</div>
-							))}
-						</div>
+					{
+						isLoading
+						||
+						listOfItems.length === 0
+							?
+							<div> {textForUser} </div>
+							:
+							<div className={style.cards}>
+								{listOfItems.map((item, index) => (
+									<div key={index}>
+										<Card items={item}/>
+									</div>
+								))}
+							</div>
 					}
 				</div>
 
