@@ -127,14 +127,18 @@ const Homepage2 = () => {
 				const uniqueIdsSet = new Set(id);
 				const uniqueIdsArray = Array.from(uniqueIdsSet);
 				const maxLength = 50;
+
 				// Если длина массива меньше максимальной длины, оставляем его без изменений
 				const slicedIdsArray = uniqueIdsArray.length >= maxLength
 					? uniqueIdsArray.slice(0, maxLength)
 					: uniqueIdsArray;
 
-				const uniqueItems = uniqueIdsArray.map(id => {
+				const uniqueItems = slicedIdsArray.map(id => {
 					return items.find(item => item.id === id);
 				})
+				// const uniqueItems = uniqueIdsArray.map(id => {
+				// 	return items.find(item => item.id === id);
+				// })
 
 				setListOfItems(uniqueItems);
 				break;
@@ -271,36 +275,41 @@ const Homepage2 = () => {
 
 	// Применяем фильты из компонента Filter:  setFilters(filtersFromChildren);
 	function applyFilters(filtersFromChildren) {
-		// setListOfID([]);
-		// setListOfItems([]);
-		// setAllIds([]);
-		// // setPage(1);
 		setFilters(filtersFromChildren);
 	}
 
 
 	useEffect(() => {
+		// if (
+		// 	Object.keys(filters).length !== 0
+		// 	&& allIds.length !== allIdsMax
+		// 	&& isFirstRender === false
+		// ) {
+		// 	setIsLoading(true);
+		// 	getAllIds(filters)
+		// }
 		if (
 			Object.keys(filters).length !== 0
-			&& allIds.length !== allIdsMax
-			// && isFirstRender === false
+
 		) {
-			setIsLoading(true);
-			getAllIds(filters)
+			// setListOfID([]);
+			// setListOfItems([]);
+			getAllIds(filters);
 		}
-	}, [allIds]);
+
+
+	}, [filters]);
 
 	useEffect(() => {
 		if (
 			isFirstRender === false
-			&& filters.length !== 0
+			&& Object.keys(filters).length !== 0
 		) {
 			setIsLoading(true);
-			setListOfID([]);
-			setListOfItems([]);
+
 			getCurrentItems(begin, end);
 		}
-	}, [filters]);
+	}, [allIds]);
 
 
 
