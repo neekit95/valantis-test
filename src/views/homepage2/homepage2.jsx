@@ -1,9 +1,12 @@
-import React, {useEffect, useState, useRef} from 'react';
+import React, {useEffect, useState, useRef, Fragment} from 'react';
 import style from './homepage2.module.scss'
 import md5 from "md5";
 import Card from '../../components/card/card'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import Filter from "../../components/filter/filter";
+import TuneIcon from '@mui/icons-material/Tune';
+import filter from "../../components/filter/filter";
 
 const Homepage2 = () => {
 	const [listOfID, setListOfID] = useState([]);
@@ -14,15 +17,17 @@ const Homepage2 = () => {
 	const [page, setPage] = useState(1);
 	let URL = 'http://api.valantis.store:40000/';
 	let URL2 = 'https://api.valantis.store:41000/';
-	const [textForUser, setTextForUser] = useState('Загрузка...');
+	const [textForUser, setTextForUser] = useState(`Загрузка`);
 	const [allIds, setAllIds] = useState([]);
 	// const [isFirstRender, setIsFirstRender] = useState(true);
 	const [begin, setBegin] = useState(0);
 	const [end, setEnd] = useState(50);
-	const [currentIds, setCurrentIds] = useState([]);
 	const [isFirstRender, setIsFirstRender] = useState(true);
-	const [isHided, setIsHided] = useState(true);
-
+	const [isHidedAdmin, setIsHidedAdmin] = useState(false);
+	const [isHidedFilter, setIsHidedFilter] = useState(false);
+	const [filteredItems, setFilteredItems] = useState([]);
+	const [filters, setFilters] = useState([]);
+	const [allIdsMax, setAllIdsMax] = useState(0);
 
 	const getCurrentDate = () => {
 		const date = new Date();
@@ -32,8 +37,19 @@ const Homepage2 = () => {
 		return `${year}${month}${day}`;
 	};
 
+	function refreshPage() {
+		window.location.reload();
+	}
+
+	function setHideAdmin() {
+		setIsHidedAdmin(!isHidedAdmin);
+	}
+
+	function setHideFilter() {
+		setIsHidedFilter(!isHidedFilter);
+	}
+
 	const fetchIdsFromServer = async () => {
-		// console.clear();
 		setIsLoading(true);
 		const maxAttempts = 10;
 		for (let attempt = 1; attempt <= maxAttempts; attempt++) {
@@ -45,8 +61,6 @@ const Homepage2 = () => {
 				const timestamp = getCurrentDate();
 				const password = 'Valantis';
 				const xAuth = md5(`${password}_${timestamp}`);
-
-				console.log(`загружаем ids (попытка ${attempt})`);
 
 				const idsResponse = await fetch(URL2, {
 					method: 'POST',
@@ -64,17 +78,10 @@ const Homepage2 = () => {
 				});
 
 				const idsData = await idsResponse.json();
-
 				const ids = idsData.result;
-				console.log(`количество ID при попытке № ${attempt}: ${ids.length}`);
-
 				const uniqueIds = [...new Set(ids)]
-				console.log(`Количество уникальных ID при попытке № ${attempt}:`, uniqueIds.length);
-
 				setListOfID(uniqueIds);
-
 				break;
-
 			} catch (error) {
 				console.error(`Error on attempt ${attempt}:`, error);
 				if (attempt === maxAttempts) {
@@ -87,6 +94,7 @@ const Homepage2 = () => {
 
 	const fetchItemsFromServer = async (ids) => {
 		const maxAttempts = 10;
+		setIsLoading(true);
 		for (let attempt = 1; attempt < maxAttempts; attempt++) {
 			if (attempt === 6) {
 				URL2 = URL;
@@ -118,10 +126,20 @@ const Homepage2 = () => {
 				// создаем массив из уникальных упорядоченных элементов по id
 				const uniqueIdsSet = new Set(id);
 				const uniqueIdsArray = Array.from(uniqueIdsSet);
-				const uniqueItems = uniqueIdsArray.map(id => {
+				const maxLength = 50;
+
+				// Если длина массива меньше максимальной длины, оставляем его без изменений
+				const slicedIdsArray = uniqueIdsArray.length >= maxLength
+					? uniqueIdsArray.slice(0, maxLength)
+					: uniqueIdsArray;
+
+				const uniqueItems = slicedIdsArray.map(id => {
 					return items.find(item => item.id === id);
 				})
-				uniqueItems.length = 50;
+				// const uniqueItems = uniqueIdsArray.map(id => {
+				// 	return items.find(item => item.id === id);
+				// })
+
 				setListOfItems(uniqueItems);
 				break;
 			} catch (error) {
@@ -129,10 +147,9 @@ const Homepage2 = () => {
 			}
 		}
 		setIsLoading(false)
-		setIsFirstRender(false);
 	}
 
-	const getAllIds = async () => {
+	const getAllIds = async (params) => {
 		const maxAttempts = 10;
 		for (let attempt = 1; attempt < maxAttempts; attempt++) {
 			if (attempt === 6) {
@@ -150,21 +167,21 @@ const Homepage2 = () => {
 						'X-Auth': xAuth,
 					},
 					body: JSON.stringify({
-						action: 'get_ids'
+						action: params ? 'filter' : 'get_ids',
+						params: params || {}
 					}),
 				});
 
 				const idsData = await idsResponse.json();
 				const ids = idsData.result;
-				console.log(`Всего  id на сервере: ${ids.length}`);
 				const uniqueAllIds = Array.from(new Set(ids));
-				console.log(`Всего уникальных id на сервере: ${uniqueAllIds.length}`);
 				setAllIds(uniqueAllIds);
 				break;
 			} catch (error) {
 				console.error("Ошибка:", error)
 			}
 		}
+		setIsFirstRender(false);
 	}
 
 	const getCurrentItems = async (from, to) => {
@@ -172,32 +189,25 @@ const Homepage2 = () => {
 		await fetchItemsFromServer(currentItems);
 	};
 
-
 	const nextPage = async () => {
 		setIsLoading(true)
-		await setListOfID([])
-		await setListOfItems([]);
-		await setBegin(prevBegin => prevBegin + 50);
-		await setEnd(prevEnd => prevEnd + 50);
-		await setPage(prevPage => prevPage + 1);
-		// setIsLoading(false);
+		setListOfItems([]);
+		setBegin(prevBegin => prevBegin + 50);
+		setEnd(prevEnd => prevEnd + 50);
+		setPage(prevPage => prevPage + 1);
 	}
 
 	const prevPage = async () => {
 		setIsLoading(true)
-		await setListOfID([])
-		await setListOfItems([]);
-		await setBegin(prevBegin => prevBegin - 50);
-		await setEnd(prevEnd => prevEnd - 50);
-		await setPage(prevPage => prevPage - 1);
-		// setIsLoading(false);
+		setListOfItems([]);
+		setBegin(prevBegin => prevBegin - 50);
+		setEnd(prevEnd => prevEnd - 50);
+		setPage(prevPage => prevPage - 1);
 	}
-
 
 	const tryFetch = async () => {
 		setIsLoading(true);
 		try {
-			setTextForUser(`Загрузка данных...`);
 			await fetchIdsFromServer();
 		} catch (error) {
 			console.error("Error:", error);
@@ -205,117 +215,176 @@ const Homepage2 = () => {
 		}
 	};
 
+	// При isLoading отображается "Загрузка..."
 	useEffect(() => {
-		setTextForUser('Загрузка...');
+		if (isLoading === true) {
+			setTextForUser(`Загрузка... `);
+		}
+
+		if (allIds.length === 0 && isFirstRender === false) {
+			setIsLoading(false);
+			setTextForUser('');
+		}
 	}, [isLoading]);
 
+	// При монтировании компонента вызываем tryFetch();
 	useEffect(() => {
 		tryFetch()
 	}, []);
 
+	// Когда кол-во элементов в массиве listOfID = 50, вызываем fetchItemsFromServer, затем вызов getAllIds (это нужно для производительности, затем мы не будем использовать listOfID)
 	useEffect(() => {
-		console.log('allIds', allIds.length)
-		setCurrentIds(allIds.slice(begin, end));
-	}, [allIds, begin, end]);
-
-	useEffect(() => {
-		if (!isFirstRender) {
-			getCurrentItems(begin, end);
-		}
-		console.log('begin', begin);
-		console.log('end', end);
-	}, [page]);
-
-	useEffect(() => {
-		console.log('currentIds', currentIds.length)
-	}, [currentIds]);
-
-	useEffect(() => {
-		console.log('listOfItems', listOfItems)
-	}, [listOfID, listOfItems]);
-
-	useEffect(() => {
-		if (listOfID.length === 50) {
+		if (listOfID.length === 50
+			&& isFirstRender === true) {
 			fetchItemsFromServer(listOfID).then(() => {
-					setIsLoading(false);
 					getAllIds();
-				// if (isLoading === false) {
-				// 	getAllIds();
-				// }
 				}
 			);
 		}
-	}, [listOfID.length !== 0]);
+	}, [listOfID]);
+
+	// Выясняем максимальное кол-во элементов в allIds
+	useEffect(() => {
+		if (allIdsMax < allIds.length) {
+			setAllIdsMax(allIds.length);
+		}
+		// При изменении allIds, если это не firstRender и не все элементы, то ставим setPage(1)
+		if (
+			allIds.length !== allIdsMax
+			&& isFirstRender === false
+		) {
+			setPage(1);
+		}
 
 
-	function setHide () {
-		setIsHided(!isHided);
+		if (
+			isFirstRender === false
+			&& Object.keys(filters).length !== 0
+		) {
+			setIsLoading(true);
+
+			getCurrentItems(begin, end);
+		}
+	}, [allIds]);
+
+	// При изменении page, если это не firstRender, получаем актуальные элементы
+	useEffect(() => {
+		if (
+			isFirstRender === false
+		) {
+			getCurrentItems(begin, end);
+		}
+	}, [page]);
+
+	// Применяем фильты из компонента Filter:  setFilters(filtersFromChildren);
+	function applyFilters(filtersFromChildren) {
+		setFilters(filtersFromChildren);
 	}
 
+	useEffect(() => {
+
+		if (
+			Object.keys(filters).length !== 0
+		) {
+			setPage(1)
+			setBegin(0);
+			setEnd(50);
+			getAllIds(filters);
+		}
+
+
+	}, [filters]);
 
 	return (
-		<div className={style.homepage}>
-			<div
+		<div className={style.layout}>
 
-				onClick={setHide}
-			>
-				{isHided ?
-					<div className={style.adminPanelHided}>
-						<p> + </p>
-					</div>
+			<div className={style.filter}>
+				{isHidedFilter ?
+					<Filter
+						onToggle={setHideFilter}
+						onFilter={applyFilters}
+						isLoading={isLoading}
+						isFirstRender={isFirstRender}
+					/>
 					:
-					<div className={style.adminPanel}>
-						<p> page:<span>{page} </span></p>
-						<p> listOfItems.length: <span>{listOfItems.length}</span></p>
-						<p> listOfID.length: <span> {listOfID.length}</span></p>
-						<p> allIds.length:<span>{allIds.length}  </span></p>
-						<p> Элементы: {begin} - {end}</p>
-					</div>
-
+					<button
+						className={style.filterBtn}
+						onClick={setHideFilter}>
+						Открыть фильтр
+						<TuneIcon/>
+					</button>
 				}
-
 			</div>
 
-			<div className={style.container}>
-				{isLoading ? <div> {textForUser} </div> :
 
-					<div className={style.cards}>
-						{listOfItems.map((item, index) => (
-							<div key={index}>
-								<Card items={item}/>
+			<div className={style.homepage}>
+
+
+				<div
+
+					onClick={setHideAdmin}
+				>
+
+			
+
+				</div>
+
+				<div className={style.container}>
+					{filters.length !== 0 && isLoading === false && listOfItems.length === 0 && allIds.length === 0
+						?
+						<div className={style.noItems}>
+							<p>По вашему запросу ничего не найдено. Обновите страницу.</p>
+							<button onClick={refreshPage}>Обновить</button>
+
+						</div>
+						:
+						null
+					}
+
+					{
+						isLoading
+						||
+						listOfItems.length === 0
+							?
+							<div> {textForUser} </div>
+							:
+							<div className={style.cards}>
+								{listOfItems.map((item, index) => (
+									<div key={index}>
+										<Card items={item}/>
+									</div>
+								))}
 							</div>
-						))}
-					</div>
-				}
-			</div>
-
-			<div className={style.buttons}>
+					}
+				</div>
 
 				<div className={style.buttons}>
 
-					<button
-						className={style.button}
-						disabled={page <= 1 || allIds.length === 0 || isLoading}
-						onClick={prevPage}
-					> {<ArrowBackIcon/>}
+					<div className={style.buttons}>
 
-					</button>
+						<button
+							className={style.button}
+							disabled={page <= 1 || allIds.length === 0 || isLoading}
+							onClick={prevPage}
+						> {<ArrowBackIcon/>}
 
-					<button
-						disabled={allIds.length === 0 || isLoading}
-						className={style.button}
-						onClick={nextPage}
-					>
-						{<ArrowForwardIcon/>}
-					</button>
+						</button>
+
+						<button
+							disabled={allIds.length === 0 || isLoading || allIds.length < 50 || listOfItems.length < 50}
+							className={style.button}
+							onClick={nextPage}
+						>
+							{<ArrowForwardIcon/>}
+						</button>
+					</div>
+
+
 				</div>
-
-
 			</div>
 		</div>
+
 	);
 };
 
 export default Homepage2;
-
-
