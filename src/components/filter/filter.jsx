@@ -104,7 +104,11 @@ const Filter = (props) => {
 						/>
 					</label>
 				</div>
-				<button className={style.submitButton} onClick={handleFilterSubmit}>
+				<button
+					className={style.submitButton}
+					onClick={handleFilterSubmit}
+					disabled={!!props.isLoading || props.isFirstRender === true}
+				>
 					Применить
 				</button>
 			</div>

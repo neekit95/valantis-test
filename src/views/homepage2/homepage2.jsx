@@ -147,7 +147,6 @@ const Homepage2 = () => {
 			}
 		}
 		setIsLoading(false)
-		// setIsFirstRender(false);
 	}
 
 	const getAllIds = async (params) => {
@@ -183,7 +182,6 @@ const Homepage2 = () => {
 			}
 		}
 		setIsFirstRender(false);
-
 	}
 
 	const getCurrentItems = async (from, to) => {
@@ -193,17 +191,14 @@ const Homepage2 = () => {
 
 	const nextPage = async () => {
 		setIsLoading(true)
-		// setListOfID([])
 		setListOfItems([]);
 		setBegin(prevBegin => prevBegin + 50);
 		setEnd(prevEnd => prevEnd + 50);
 		setPage(prevPage => prevPage + 1);
-		// setIsLoading(false);
 	}
 
 	const prevPage = async () => {
 		setIsLoading(true)
-		// setListOfID([])
 		setListOfItems([]);
 		setBegin(prevBegin => prevBegin - 50);
 		setEnd(prevEnd => prevEnd - 50);
@@ -239,7 +234,6 @@ const Homepage2 = () => {
 
 	// Когда кол-во элементов в массиве listOfID = 50, вызываем fetchItemsFromServer, затем вызов getAllIds (это нужно для производительности, затем мы не будем использовать listOfID)
 	useEffect(() => {
-		// setListOfItems([]);
 		if (listOfID.length === 50
 			&& isFirstRender === true) {
 			fetchItemsFromServer(listOfID).then(() => {
@@ -254,17 +248,23 @@ const Homepage2 = () => {
 		if (allIdsMax < allIds.length) {
 			setAllIdsMax(allIds.length);
 		}
-
 		// При изменении allIds, если это не firstRender и не все элементы, то ставим setPage(1)
 		if (
 			allIds.length !== allIdsMax
 			&& isFirstRender === false
-
 		) {
 			setPage(1);
 		}
 
 
+		if (
+			isFirstRender === false
+			&& Object.keys(filters).length !== 0
+		) {
+			setIsLoading(true);
+
+			getCurrentItems(begin, end);
+		}
 	}, [allIds]);
 
 	// При изменении page, если это не firstRender, получаем актуальные элементы
@@ -276,15 +276,10 @@ const Homepage2 = () => {
 		}
 	}, [page]);
 
-
-	// 	До сюда все работает.
-	//  -----------------------------------------------------------------------------------
-
 	// Применяем фильты из компонента Filter:  setFilters(filtersFromChildren);
 	function applyFilters(filtersFromChildren) {
 		setFilters(filtersFromChildren);
 	}
-
 
 	useEffect(() => {
 
@@ -300,22 +295,6 @@ const Homepage2 = () => {
 
 	}, [filters]);
 
-	useEffect(() => {
-		if (
-			isFirstRender === false
-			&& Object.keys(filters).length !== 0
-		) {
-			setIsLoading(true);
-
-			getCurrentItems(begin, end);
-		}
-	}, [allIds]);
-
-
-
-
-	// TODO: обработать исчезание страницы
-
 	return (
 		<div className={style.layout}>
 
@@ -325,6 +304,7 @@ const Homepage2 = () => {
 						onToggle={setHideFilter}
 						onFilter={applyFilters}
 						isLoading={isLoading}
+						isFirstRender={isFirstRender}
 					/>
 					:
 					<button
@@ -344,24 +324,8 @@ const Homepage2 = () => {
 
 					onClick={setHideAdmin}
 				>
-					{isHidedAdmin ?
-						<div className={style.adminPanelHided}>
-							<p> + </p>
-						</div>
-						:
-						<div className={style.adminPanel}>
-							<p> page:<span>{page} </span></p>
-							<p> listOfItems.length: <span>{listOfItems.length}</span></p>
-							<p> listOfID.length: <span> {listOfID.length}</span></p>
-							<p> allIds.length:<span>{allIds.length}  </span></p>
-							<p> Элементы: {begin} - {end}</p>
-							<p>filters: <span>{JSON.stringify(filters)}</span></p>
-							<p> allIdsMax: <span>{allIdsMax}</span></p>
-							<p>isFirstRender: <span>{isFirstRender ? `true` : `false`}</span></p>
-							<p>isLoading: <span>{isLoading ? `true` : `false`}</span></p>
-						</div>
 
-					}
+			
 
 				</div>
 
