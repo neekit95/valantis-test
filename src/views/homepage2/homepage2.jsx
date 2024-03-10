@@ -225,6 +225,11 @@ const Homepage2 = () => {
 		if (isLoading === true) {
 			setTextForUser(`Загрузка... `);
 		}
+
+		if (allIds.length === 0 && isFirstRender === false) {
+			setIsLoading(false);
+			setTextForUser('');
+		}
 	}, [isLoading]);
 
 	// При монтировании компонента вызываем tryFetch();
@@ -258,6 +263,8 @@ const Homepage2 = () => {
 		) {
 			setPage(1);
 		}
+
+
 	}, [allIds]);
 
 	// При изменении page, если это не firstRender, получаем актуальные элементы
