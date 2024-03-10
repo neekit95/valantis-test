@@ -24,7 +24,7 @@ const Homepage2 = () => {
 	const [end, setEnd] = useState(50);
 	const [isFirstRender, setIsFirstRender] = useState(true);
 	const [isHidedAdmin, setIsHidedAdmin] = useState(false);
-	const [isHidedFilter, setIsHidedFilter] = useState(true);
+	const [isHidedFilter, setIsHidedFilter] = useState(false);
 	const [filteredItems, setFilteredItems] = useState([]);
 	const [filters, setFilters] = useState([]);
 	const [allIdsMax, setAllIdsMax] = useState(0);
@@ -287,20 +287,13 @@ const Homepage2 = () => {
 
 
 	useEffect(() => {
-		// if (
-		// 	Object.keys(filters).length !== 0
-		// 	&& allIds.length !== allIdsMax
-		// 	&& isFirstRender === false
-		// ) {
-		// 	setIsLoading(true);
-		// 	getAllIds(filters)
-		// }
+
 		if (
 			Object.keys(filters).length !== 0
-
 		) {
-			// setListOfID([]);
-			// setListOfItems([]);
+			setPage(1)
+			setBegin(0);
+			setEnd(50);
 			getAllIds(filters);
 		}
 
@@ -366,8 +359,6 @@ const Homepage2 = () => {
 							<p> allIdsMax: <span>{allIdsMax}</span></p>
 							<p>isFirstRender: <span>{isFirstRender ? `true` : `false`}</span></p>
 							<p>isLoading: <span>{isLoading ? `true` : `false`}</span></p>
-							{/*<p>isHidedAdmin: <span>{isHidedAdmin ? `true` : `false`}</span></p>*/}
-							{/*<p>isHidedFilter: <span>{isHidedFilter ? `true` : `false`}</span></p>*/}
 						</div>
 
 					}
