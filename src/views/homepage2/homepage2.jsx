@@ -178,21 +178,21 @@ const Homepage2 = () => {
 
 	const nextPage = async () => {
 		setIsLoading(true)
-		await setListOfID([])
-		await setListOfItems([]);
-		await setBegin(prevBegin => prevBegin + 50);
-		await setEnd(prevEnd => prevEnd + 50);
-		await setPage(prevPage => prevPage + 1);
+		setListOfID([])
+		setListOfItems([]);
+		setBegin(prevBegin => prevBegin + 50);
+		setEnd(prevEnd => prevEnd + 50);
+		setPage(prevPage => prevPage + 1);
 		// setIsLoading(false);
 	}
 
 	const prevPage = async () => {
 		setIsLoading(true)
-		await setListOfID([])
-		await setListOfItems([]);
-		await setBegin(prevBegin => prevBegin - 50);
-		await setEnd(prevEnd => prevEnd - 50);
-		await setPage(prevPage => prevPage - 1);
+		setListOfID([])
+		setListOfItems([]);
+		setBegin(prevBegin => prevBegin - 50);
+		setEnd(prevEnd => prevEnd - 50);
+		setPage(prevPage => prevPage - 1);
 	}
 
 
@@ -235,16 +235,49 @@ const Homepage2 = () => {
 		}
 	}, [page]);
 
-	// Когда кол-во элементов в массиве listOfID = 50, вызываем fetchItemsFromServer, затем вызов getAllIds (это нужно для производительности, затем мы не будем использовать listOfID)
+	// // Когда кол-во элементов в массиве listOfID = 50, вызываем fetchItemsFromServer, затем вызов getAllIds (это нужно для производительности, затем мы не будем использовать listOfID)
+	// useEffect(() => {
+	// 	if (listOfID.length === 50) {
+	// 		fetchItemsFromServer(listOfID).then(() => {
+	// 				// setIsLoading(false)''
+	// 				getAllIds();
+	// 			}
+	// 		);
+	// 	}
+	// }, [listOfID.length !== 0 && isFirstRender === true]);
+
+
+	// useEffect(() => {
+	// 	if (listOfID.length === 50) {
+	// 		fetchItemsFromServer(listOfID).then(() => {
+	// 				// setIsLoading(false)''
+	// 				getAllIds();
+	// 			}
+	// 		);
+	// 	}
+	// },
+	// 	[
+	// 		listOfID.length !== 0
+	// 		// && isFirstRender === false
+	// 	]
+	// );
+
 	useEffect(() => {
-		if (listOfID.length === 50) {
-			fetchItemsFromServer(listOfID).then(() => {
-				// setIsLoading(false)''
-					getAllIds();
-				}
-			);
-		}
-	}, [listOfID.length !== 0 && isFirstRender === true]);
+			// setListOfItems([]);
+			if (listOfID.length === 50
+				&& isFirstRender === true) {
+				fetchItemsFromServer(listOfID).then(() => {
+						getAllIds();
+					}
+				);
+			}
+
+
+		},
+		[
+			listOfID
+		]
+	);
 
 
 	function setHideAdmin() {
@@ -257,9 +290,10 @@ const Homepage2 = () => {
 
 
 	function applyFilters(filtersFromChildren) {
-		setListOfID([]);
-		setListOfItems([]);
-		setAllIds([]);
+		setPage(1);
+		// setListOfID([]);
+		// setListOfItems([]);
+		// setAllIds([]);
 		setFilters(filtersFromChildren);
 	}
 
@@ -284,7 +318,9 @@ const Homepage2 = () => {
 	function refreshPage() {
 		window.location.reload();
 	}
-	//TODO: Если вводят несуществующий товар, вернуть на первую страницу
+
+
+	// TODO: обработать исчезание страницы
 
 	return (
 		<div className={style.layout}>
@@ -327,6 +363,7 @@ const Homepage2 = () => {
 							<p> allIds.length:<span>{allIds.length}  </span></p>
 							<p> Элементы: {begin} - {end}</p>
 							<p>filters: <span>{JSON.stringify(filters)}</span></p>
+							<p>isFirstRender: <span>{isFirstRender ? `true` : `false`}</span></p>
 						</div>
 
 					}
