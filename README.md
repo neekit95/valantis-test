@@ -14,6 +14,8 @@ Valantis-jewelry  — это онлайн магазин, в котором от
 Приложение было выполнено в качестве тестового задания. 
 Требования к заданию можно посмотреть [здесь](https://github.com/ValantisJewelry/TestTaskValantis)
 
+## Технологии
+- React
 
 ## Использование
 Протестировать приложение можно [здесь](https://neekit95.github.io/valantis-test/)
